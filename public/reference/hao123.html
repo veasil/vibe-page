@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1024">
+<title>hao123_上网从这里开始</title>
+<style>
+    /* ===== 2010 年代经典门户导航站复刻 ===== */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+        font: 12px/1.5 "Microsoft YaHei", "微软雅黑", "宋体", Tahoma, Arial, sans-serif;
+        color: #333;
+        background: #f5f6f7;
+        background-image:
+            linear-gradient(180deg, #2b8eea 0, #2b8eea 6px, transparent 6px),
+            linear-gradient(180deg, #e8f3fd 0, #f5f6f7 230px);
+        background-repeat: no-repeat;
+        min-width: 1000px;
+    }
+    a { color: #333; text-decoration: none; }
+    a:hover { color: #e60012; text-decoration: underline; }
+    ul { list-style: none; }
+
+    .wrap { width: 1000px; margin: 0 auto; }
+
+    /* ---------- 顶栏 ---------- */
+    .topbar { height: 30px; line-height: 30px; font-size: 12px; color: #555; }
+    .topbar .wrap { display: flex; justify-content: space-between; }
+    .topbar a { color: #555; margin: 0 5px; }
+    .topbar .set-home {
+        background: #fff; border: 1px solid #d9d9d9; border-top: none;
+        padding: 0 12px; border-radius: 0 0 4px 4px; color: #2b8eea; font-weight: bold;
+    }
+    .topbar .tz { color: #888; }
+    .topbar .tz b { color: #e60012; font-weight: normal; }
+    .topbar .ad-corner { color: #2b8eea; }
+    .topbar .ad-corner .tag { color: #ccc; font-size: 11px; }
+
+    /* ---------- 头部：logo + 搜索 ---------- */
+    .header { padding: 16px 0 10px; }
+    .header .wrap { display: flex; align-items: flex-start; gap: 26px; }
+
+    .logo { font: 900 italic 44px/1 Arial, sans-serif; letter-spacing: -2px; padding-top: 4px; white-space: nowrap; }
+    .logo .ha { color: #2b8eea; }
+    .logo .num { color: #e60012; }
+    .logo small { display: block; font: normal 11px/1 "Microsoft YaHei"; color: #999; letter-spacing: 0; margin-top: 5px; text-align: center; }
+
+    .search { flex: 1; max-width: 640px; }
+    .engine-tabs { margin-bottom: -1px; position: relative; z-index: 2; }
+    .engine-tabs a {
+        display: inline-block; padding: 4px 14px; margin-right: 2px; font-size: 13px; color: #555;
+        background: #eef0f2; border: 1px solid #d9d9d9; border-bottom: none; border-radius: 4px 4px 0 0;
+    }
+    .engine-tabs a.on { background: #fff; color: #2b8eea; font-weight: bold; border-color: #2b8eea; border-top-width: 2px; padding-top: 3px; }
+    .engine-tabs a:hover { text-decoration: none; color: #2b8eea; }
+    .engine-tabs a small { font-size: 11px; color: #e60012; font-weight: bold; }
+
+    .search-row { display: flex; align-items: stretch; gap: 0; }
+    .baidu-logo { font: 900 italic 26px/40px Arial; color: #2b8eea; padding-right: 10px; white-space: nowrap; }
+    .baidu-logo b { color: #e60012; }
+    .search-box { display: flex; border: 2px solid #2b8eea; background: #fff; height: 40px; flex: 1; }
+    .search-box input { flex: 1; border: none; outline: none; padding: 0 12px; font-size: 15px; color: #333; font-family: "Microsoft YaHei"; }
+    .search-box button {
+        width: 100px; border: none; cursor: pointer;
+        background: linear-gradient(#3aa0f5, #2b8eea); color: #fff;
+        font-size: 16px; font-weight: bold; letter-spacing: 4px; font-family: "Microsoft YaHei";
+    }
+    .search-box button:hover { background: linear-gradient(#2b8eea, #1f7fd6); }
+
+    .hot-words { margin-top: 6px; color: #999; font-size: 12px; }
+    .hot-words a { margin-right: 12px; color: #2b8eea; }
+    .hot-words a.fire { color: #e60012; }
+
+    /* 搜索框下方文字广告条 */
+    .text-ad {
+        margin: 8px 0 0; padding: 4px 10px; background: #fffbe6; border: 1px solid #ffe58f;
+        font-size: 12px; color: #8a6d00; border-radius: 3px; line-height: 20px; overflow: hidden; white-space: nowrap;
+    }
+    .text-ad a { color: #c0392b; margin: 0 14px 0 0; }
+    .text-ad a:hover { color: #e60012; }
+    .text-ad .tag { float: right; color: #c8b160; font-size: 11px; }
+
+    /* ---------- 顶部通栏广告 ---------- */
+    .top-banner { display: flex; align-items: center; height: 70px; margin-top: 8px;
+        border-radius: 4px; overflow: hidden; position: relative; color: #fff;
+        background: linear-gradient(90deg, #e1251b, #ff5000 60%, #ff8a00); }
+    .top-banner .tb-l { font: 900 italic 30px/1 Arial; padding: 0 24px; border-right: 1px solid rgba(255,255,255,.3); }
+    .top-banner .tb-c { padding: 0 26px; flex: 1; }
+    .top-banner .tb-c b { display: block; font-size: 24px; letter-spacing: 1px; text-shadow: 0 1px 2px rgba(0,0,0,.2); }
+    .top-banner .tb-c span { font-size: 13px; opacity: .95; }
+    .top-banner .tb-btn { background: #ffeb3b; color: #e1251b; font-weight: bold; font-size: 15px; padding: 9px 26px; border-radius: 22px; margin-right: 28px; }
+    .top-banner .tb-tag { position: absolute; right: 6px; bottom: 3px; font-size: 10px; opacity: .7; }
+    .top-banner:hover { text-decoration: none; opacity: .96; }
+
+    /* ---------- 右下角弹窗广告 ---------- */
+    .popup-ad { position: fixed; right: 14px; bottom: 14px; width: 280px; z-index: 99;
+        background: #fff; border: 1px solid #d0d3d6; border-radius: 6px; overflow: hidden;
+        box-shadow: 0 6px 22px rgba(0,0,0,.22); }
+    .popup-ad .pa-hd { background: #f3f4f5; border-bottom: 1px solid #e7e8ea; padding: 5px 10px; font-size: 12px; color: #888; }
+    .popup-ad .pa-hd .x { float: right; cursor: pointer; color: #999; font-size: 14px; line-height: 1; }
+    .popup-ad .pa-hd .x:hover { color: #e60012; }
+    .popup-ad .pa-body { display: block; height: 170px; position: relative; color: #fff;
+        background: linear-gradient(135deg, #11998e, #38ef7d); }
+    .popup-ad .pa-body .big { position: absolute; left: 16px; top: 26px; font-size: 24px; font-weight: bold; line-height: 1.3; text-shadow: 0 1px 3px rgba(0,0,0,.25); }
+    .popup-ad .pa-body .sm { position: absolute; left: 16px; top: 96px; font-size: 13px; opacity: .95; }
+    .popup-ad .pa-body .go { position: absolute; left: 16px; bottom: 16px; background: #fff; color: #11998e; font-weight: bold; padding: 6px 20px; border-radius: 18px; font-size: 13px; }
+    .popup-ad .pa-body:hover { text-decoration: none; opacity: .95; }
+
+    /* ---------- 快捷应用宫格 ---------- */
+    .quick { background: #fff; border: 1px solid #e3e5e8; border-radius: 4px; padding: 12px 8px 4px; margin-top: 8px; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+    .quick ul { display: flex; flex-wrap: wrap; }
+    .quick li { width: 8.333%; text-align: center; margin-bottom: 10px; }
+    .quick li a { display: block; color: #444; font-size: 12px; }
+    .quick li a:hover { text-decoration: none; color: #e60012; }
+    .ico { width: 32px; height: 32px; margin: 0 auto 4px; border-radius: 7px; color: #fff; font-size: 15px; font-weight: bold; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(0,0,0,.15); }
+
+    /* ---------- 主体布局 ---------- */
+    .main { display: flex; gap: 10px; margin-top: 10px; padding-bottom: 26px; align-items: flex-start; }
+    .col-left  { width: 732px; }
+    .col-right { width: 258px; }
+
+    /* 链接版块 */
+    .panel { background: #fff; border: 1px solid #e3e5e8; border-radius: 4px; margin-bottom: 10px; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+    .panel-hd { display: flex; align-items: baseline; gap: 8px; padding: 7px 12px 6px; border-bottom: 1px dashed #ececec; }
+    .panel-hd .bar { width: 3px; height: 13px; background: #2b8eea; align-self: center; }
+    .panel-hd h3 { font-size: 14px; color: #222; font-weight: bold; }
+    .panel-hd .sub a { color: #999; font-size: 12px; margin-right: 7px; }
+    .panel-hd .sub a:hover { color: #e60012; }
+    .panel-hd .more { margin-left: auto; color: #bbb; font-size: 12px; }
+
+    .links { padding: 7px 10px 9px; }
+    .links ul { display: flex; flex-wrap: wrap; }
+    .links li { width: 14.28%; line-height: 23px; white-space: nowrap; overflow: hidden; }
+    .links li a { color: #555; display: inline-flex; align-items: center; max-width: 100%; }
+    .links li a.hot { color: #e60012; }
+    /* 链接前小图标（favicon 风格） */
+    .fav { flex: 0 0 auto; width: 14px; height: 14px; border-radius: 2px; margin-right: 4px;
+        color: #fff; font: bold 9px/14px Arial; text-align: center; overflow: hidden; }
+    .links li a.new .txt::after { content: "new"; font: 9px Arial; color: #fff; background: #ff8a00; padding: 0 3px; border-radius: 2px; margin-left: 3px; vertical-align: text-top; }
+
+    /* 左栏中部矩形广告 */
+    .banner-ad { display: block; height: 60px; margin: 0 0 10px; border: 1px solid #e3e5e8; border-radius: 4px; overflow: hidden; position: relative;
+        background: linear-gradient(100deg, #ff6a00, #ee0979); }
+    .banner-ad .b-txt { position: absolute; left: 20px; top: 0; bottom: 0; display: flex; flex-direction: column; justify-content: center; color: #fff; }
+    .banner-ad .b-txt b { font-size: 21px; letter-spacing: 1px; text-shadow: 0 1px 2px rgba(0,0,0,.2); }
+    .banner-ad .b-txt span { font-size: 12px; opacity: .92; margin-top: 3px; }
+    .banner-ad .b-btn { position: absolute; right: 20px; top: 50%; transform: translateY(-50%);
+        background: #fff; color: #ee0979; font-size: 13px; font-weight: bold; padding: 6px 18px; border-radius: 20px; }
+    .banner-ad .b-tag { position: absolute; right: 4px; bottom: 2px; font-size: 10px; color: rgba(255,255,255,.7); }
+    .banner-ad:hover { text-decoration: none; opacity: .94; }
+
+    /* 右栏小工具 */
+    .widget { background: #fff; border: 1px solid #e3e5e8; border-radius: 4px; margin-bottom: 10px; box-shadow: 0 1px 2px rgba(0,0,0,.04); overflow: hidden; }
+    .widget-hd { background: #fafbfc; border-bottom: 1px solid #eee; padding: 7px 12px; font-size: 13px; font-weight: bold; color: #333; }
+    .widget-hd span { float: right; font-weight: normal; color: #bbb; font-size: 11px; }
+
+    .weather { padding: 12px; display: flex; align-items: center; gap: 14px; }
+    .weather .deg { font-size: 32px; color: #ff8a00; font-weight: bold; }
+    .weather .deg small { font-size: 13px; }
+    .weather .info { font-size: 12px; color: #666; line-height: 1.8; }
+    .weather .info b { color: #2b8eea; }
+
+    .rank { padding: 5px 12px 9px; }
+    .rank li { line-height: 24px; font-size: 13px; white-space: nowrap; overflow: hidden; }
+    .rank .n { display: inline-block; width: 16px; height: 16px; line-height: 16px; text-align: center; background: #c9ccd1; color: #fff; font-size: 11px; border-radius: 2px; margin-right: 7px; font-style: italic; }
+    .rank li:nth-child(1) .n { background: #e60012; }
+    .rank li:nth-child(2) .n { background: #ff6600; }
+    .rank li:nth-child(3) .n { background: #ff9900; }
+    .rank .fire { color: #e60012; font-size: 9px; }
+
+    /* 右栏方形图片广告 */
+    .box-ad { display: block; height: 200px; border-radius: 4px; overflow: hidden; position: relative; color: #fff;
+        background: linear-gradient(135deg, #1e3c72, #2a5298); border: 1px solid #e3e5e8; }
+    .box-ad .badge { position: absolute; top: 10px; left: 10px; background: #e60012; padding: 2px 8px; font-size: 12px; border-radius: 2px; font-weight: bold; }
+    .box-ad .big { position: absolute; top: 52px; left: 14px; right: 14px; font-size: 26px; font-weight: bold; line-height: 1.25; text-shadow: 0 1px 3px rgba(0,0,0,.3); }
+    .box-ad .small { position: absolute; bottom: 44px; left: 14px; font-size: 13px; opacity: .9; }
+    .box-ad .go { position: absolute; bottom: 14px; left: 14px; background: #ffcc00; color: #333; font-weight: bold; padding: 6px 20px; border-radius: 20px; font-size: 13px; }
+    .box-ad .tag { position: absolute; bottom: 3px; right: 5px; font-size: 10px; opacity: .6; }
+    .box-ad:hover { text-decoration: none; opacity: .95; }
+
+    .mini { padding: 8px 6px; }
+    .mini ul { display: flex; flex-wrap: wrap; }
+    .mini li { width: 25%; text-align: center; line-height: 28px; font-size: 12px; border-right: 1px solid #f0f0f0; border-bottom: 1px solid #f0f0f0; box-sizing: border-box; }
+    .mini li a { color: #555; }
+
+    /* ---------- 底部 ---------- */
+    .footer { background: #fff; border-top: 1px solid #e3e5e8; padding: 16px 0 24px; text-align: center; color: #999; font-size: 12px; }
+    .footer .nav a { margin: 0 8px; color: #666; }
+    .footer .copy { margin-top: 9px; line-height: 1.9; }
+    .footer .copy a { color: #999; }
+</style>
+</head>
+<body>
+
+<!-- 顶栏 -->
+<div class="topbar">
+    <div class="wrap">
+        <div>
+            <a class="set-home" href="javascript:;" onclick="setHome()">★ 设为主页</a>
+            <a href="javascript:;">加入收藏</a>
+            <span class="tz" id="datetime"></span>
+        </div>
+        <div>
+            <a class="ad-corner" href="javascript:;">【理财】8%年化稳健收益，新人专享 <span class="tag">广告</span></a>
+            &nbsp;|&nbsp;
+            <a href="javascript:;">登录</a>|
+            <a href="javascript:;">注册</a>|
+            <a href="javascript:;">客户端</a>
+        </div>
+    </div>
+</div>
+
+<!-- 头部 -->
+<div class="header">
+    <div class="wrap">
+        <div class="logo">
+            <span class="ha">hao</span><span class="num">123</span>
+            <small>上网从这里开始</small>
+        </div>
+        <div class="search">
+            <div class="engine-tabs">
+                <a class="on" href="javascript:;">网页</a>
+                <a href="javascript:;">资讯</a>
+                <a href="javascript:;">视频 <small>HD</small></a>
+                <a href="javascript:;">图片</a>
+                <a href="javascript:;">音乐</a>
+                <a href="javascript:;">地图</a>
+                <a href="javascript:;">问答</a>
+            </div>
+            <div class="search-row">
+                <div class="baidu-logo">Bai<b>百度</b></div>
+                <div class="search-box">
+                    <input id="kw" type="text" placeholder="输入想搜的内容" autocomplete="off">
+                    <button onclick="doSearch()">百度一下</button>
+                </div>
+            </div>
+            <div class="hot-words">
+                <a class="fire" href="javascript:;">春节抢票攻略</a>
+                <a class="fire" href="javascript:;">最新大片在线看</a>
+                <a href="javascript:;">天气预报</a>
+                <a href="javascript:;">12306</a>
+                <a href="javascript:;">个人所得税</a>
+            </div>
+            <!-- 文字广告条 -->
+            <div class="text-ad">
+                <span class="tag">广告</span>
+                <a href="javascript:;">中国·1188幼篮全国直播</a>
+                <a href="javascript:;">范冰冰冯小刚惊喜亮相</a>
+                <a href="javascript:;">滨海明珠养老公寓火爆认筹</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 顶部通栏大广告 -->
+<div class="wrap">
+    <a class="top-banner" href="javascript:;">
+        <span class="tb-l">京东</span>
+        <span class="tb-c"><b>年货节 · 全场五折封顶</b><span>家电以旧换新最高补贴800元 · 白条24期免息 · 抢万元神券</span></span>
+        <span class="tb-btn">立即抢购 &gt;</span>
+        <span class="tb-tag">广告 · 关闭</span>
+    </a>
+</div>
+
+<!-- 快捷应用宫格 -->
+<div class="wrap">
+    <div class="quick"><ul id="quickGrid"></ul></div>
+</div>
+
+<!-- 主体 -->
+<div class="wrap">
+<div class="main">
+    <!-- 左栏 -->
+    <div class="col-left" id="panels"></div>
+
+    <!-- 右栏 -->
+    <div class="col-right">
+        <div class="widget">
+            <div class="widget-hd">天气 <span>北京·更新于刚刚</span></div>
+            <div class="weather">
+                <div class="deg" id="wdeg">8<small>℃</small></div>
+                <div class="info">
+                    <div><b>北京</b> 晴转多云 -3~9℃</div>
+                    <div>东北风 3级 · 湿度 32%</div>
+                    <div>空气质量：<span style="color:#ff8a00">良 78</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 方形图片广告 -->
+        <a class="box-ad" href="javascript:;">
+            <span class="badge">招商</span>
+            <span class="big">滨海明珠<br>江景大宅</span>
+            <span class="small">建面89-138㎡ · 首付15万起</span>
+            <span class="go">立即咨询 &gt;</span>
+            <span class="tag">广告</span>
+        </a>
+
+        <div class="widget">
+            <div class="widget-hd">百度热搜榜 <span>实时</span></div>
+            <ul class="rank">
+                <li><span class="n">1</span><a href="javascript:;">春运首日火车票开抢</a> <span class="fire">热</span></li>
+                <li><span class="n">2</span><a href="javascript:;">贺岁档票房破10亿</a> <span class="fire">热</span></li>
+                <li><span class="n">3</span><a href="javascript:;">明日寒潮来袭降温</a></li>
+                <li><span class="n">4</span><a href="javascript:;">手机预装应用可卸载</a></li>
+                <li><span class="n">5</span><a href="javascript:;">某卫视春晚节目单</a></li>
+                <li><span class="n">6</span><a href="javascript:;">个税起征点调整</a></li>
+                <li><span class="n">7</span><a href="javascript:;">国产新片定档</a></li>
+                <li><span class="n">8</span><a href="javascript:;">双十二剁手攻略</a></li>
+                <li><span class="n">9</span><a href="javascript:;">流量套餐资费下调</a></li>
+                <li><span class="n">10</span><a href="javascript:;">机票打折抢购</a></li>
+            </ul>
+        </div>
+
+        <!-- 第二个方形图片广告 -->
+        <a class="box-ad" href="javascript:;" style="background:linear-gradient(135deg,#c31432,#240b36)">
+            <span class="badge" style="background:#ffcc00;color:#333">游戏</span>
+            <span class="big">传奇霸业<br>一刀999级</span>
+            <span class="small">无需下载 · 上线送满V · 屠龙宝刀</span>
+            <span class="go">点击进入 &gt;</span>
+            <span class="tag">广告</span>
+        </a>
+
+        <div class="widget">
+            <div class="widget-hd">实用查询</div>
+            <div class="mini">
+                <ul>
+                    <li><a href="javascript:;">万年历</a></li>
+                    <li><a href="javascript:;">火车票</a></li>
+                    <li><a href="javascript:;">飞机票</a></li>
+                    <li><a href="javascript:;">酒店</a></li>
+                    <li><a href="javascript:;">快递</a></li>
+                    <li><a href="javascript:;">汇率</a></li>
+                    <li><a href="javascript:;">股票</a></li>
+                    <li><a href="javascript:;">电影票</a></li>
+                    <li><a href="javascript:;">地图</a></li>
+                    <li><a href="javascript:;">号码</a></li>
+                    <li><a href="javascript:;">翻译</a></li>
+                    <li><a href="javascript:;">计算器</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+<!-- 底部 -->
+<div class="footer">
+    <div class="wrap">
+        <div class="nav">
+            <a href="javascript:;">关于hao123</a>|
+            <a href="javascript:;">收录网站</a>|
+            <a href="javascript:;">意见反馈</a>|
+            <a href="javascript:;">使用帮助</a>|
+            <a href="javascript:;">网站地图</a>|
+            <a href="javascript:;">客户端下载</a>
+        </div>
+        <div class="copy">
+            京ICP证030173号 · 京公网安备 11000002000001号<br>
+            © 2010-2016 hao123.com 版权所有 &nbsp;|&nbsp; 上网从这里开始
+        </div>
+    </div>
+</div>
+
+<!-- 右下角弹窗广告 -->
+<div class="popup-ad" id="popupAd">
+    <div class="pa-hd">推广 <span class="x" onclick="document.getElementById('popupAd').style.display='none'">✕ 关闭</span></div>
+    <a class="pa-body" href="javascript:;">
+        <span class="big">领6888元<br>装修大礼包</span>
+        <span class="sm">免费量房设计 · 3套方案任选</span>
+        <span class="go">立即抢 &gt;</span>
+    </a>
+</div>
+
+<script>
+    // ---------- 配色：按名字取稳定颜色 ----------
+    var palette = ["#2b8eea","#ff5000","#e1251b","#ff0036","#e6162d","#fdb933","#00a0e9",
+        "#00be06","#0066ff","#c00000","#3385ff","#1677ff","#26c4ff","#5b8ff9","#3cb371",
+        "#6a5acd","#ff7a00","#ee4d2d","#16b378","#f5317f","#8e44ad","#16a085"];
+    function colorOf(name){
+        var h = 0;
+        for (var i=0;i<name.length;i++) h = (h*31 + name.charCodeAt(i)) & 0x7fffffff;
+        return palette[h % palette.length];
+    }
+
+    // ---------- 快捷应用宫格 ----------
+    var apps = ["百度","淘宝","京东","天猫","微博","QQ空间","优酷","爱奇艺","知乎","网易","贴吧","支付宝",
+                "58同城","邮箱","地图","翻译","游戏","购物","团购","小说","音乐","视频","新闻","更多"];
+    var grid = document.getElementById("quickGrid");
+    apps.forEach(function(t){
+        var li = document.createElement("li");
+        li.innerHTML = '<a href="javascript:;"><span class="ico" style="background:'+colorOf(t)+'">'+t.charAt(0)+'</span>'+t+'</a>';
+        grid.appendChild(li);
+    });
+
+    // ---------- 链接版块数据（已删除「美团」）----------
+    var sections = [
+        { title:"常用", color:"#2b8eea",
+          sub:["百度","淘宝","京东","微博"],
+          links:[
+            ["百度","hot"],["淘宝网","hot"],["京东商城"],["天猫商城"],["新浪微博"],["QQ空间"],["优酷网"],
+            ["爱奇艺"],["腾讯网"],["网易"],["新浪网"],["搜狐"],["12306"],["支付宝","new"],["人人网"],
+            ["天涯论坛"],["百度贴吧"],["迅雷下载"],["360导航"],["凤凰网"],["新浪邮箱"],["QQ邮箱"],
+            ["163邮箱"],["百度网盘"],["豆瓣网"],["知乎"],["简书"],["CSDN"]
+          ]},
+        { title:"视频", color:"#e60012",
+          sub:["电视剧","电影","综艺","动漫","直播"],
+          links:[
+            ["优酷视频","hot"],["爱奇艺","hot"],["腾讯视频"],["搜狐视频"],["土豆网"],["乐视网"],["芒果TV"],
+            ["PPTV"],["哔哩哔哩"],["A站","new"],["CNTV"],["风行网"],["迅雷看看"],["六间房"],["YY直播"],
+            ["电影天堂"],["人人影视"],["2345影视"],["百度影音"],["快播"],["暴风影音"],["56网"],
+            ["凤凰视频"],["新浪视频"],["奇艺高清"],["华数TV"],["太平洋影音"],["电影港"]
+          ]},
+        { title:"购物", color:"#ff8a00",
+          sub:["女装","数码","家电","团购","优惠券"],
+          links:[
+            ["淘宝网","hot"],["天猫","hot"],["京东商城"],["苏宁易购"],["唯品会"],["聚划算"],["当当网"],
+            ["亚马逊"],["国美在线"],["1号店"],["大众点评"],["糯米团购"],["蘑菇街","new"],["凡客诚品"],
+            ["返利网"],["折800"],["拍拍网"],["卓越亚马逊"],["易讯网"],["走秀网"],["麦考林"],["乐蜂网"],
+            ["聚美优品"],["梦芭莎"],["银泰网"],["库巴网"],["新蛋网"],["维棉网"]
+          ]},
+        { title:"小说·游戏", color:"#16b378",
+          sub:["玄幻","言情","网游","页游","单机"],
+          links:[
+            ["起点中文网","hot"],["纵横中文网"],["17K小说"],["榕树下"],["潇湘书院"],["红袖添香"],["小说阅读网"],
+            ["4399小游戏","hot"],["7k7k"],["英雄联盟"],["地下城DNF"],["梦幻西游"],["穿越火线"],["QQ游戏"],
+            ["17173"],["多玩游戏"],["游民星空","new"],["9377页游"],["37游戏"],["太平洋游戏"],["巴士单机"],
+            ["游侠网"],["游迅网"],["叶子猪"],["265G页游"],["91wan"],["逗游网"],["新浪游戏"]
+          ]},
+        { title:"新闻·财经", color:"#0066ff",
+          sub:["头条","国际","军事","股票","基金"],
+          links:[
+            ["新浪新闻","hot"],["网易新闻"],["腾讯新闻"],["凤凰资讯"],["人民网"],["新华网"],["央视网"],
+            ["中国新闻网"],["环球网"],["参考消息"],["东方财富","hot"],["新浪财经"],["和讯网"],["金融界"],
+            ["同花顺"],["证券之星"],["中金在线"],["雪球"],["天天基金"],["华尔街见闻"],["第一财经"],
+            ["21世纪经济"],["中证网"],["全景网"],["股城网"],["汇通网"],["金十数据"],["FX168"]
+          ]},
+        { title:"音乐·图片", color:"#f5317f",
+          sub:["流行","排行榜","壁纸","美图","表情"],
+          links:[
+            ["QQ音乐","hot"],["酷狗音乐"],["酷我音乐"],["网易云音乐","new"],["虾米音乐"],["百度音乐"],["千千静听"],
+            ["多米音乐"],["一听音乐"],["5sing原创"],["九酷音乐"],["DJ音乐网"],["昵图网"],["千图网"],
+            ["站酷ZCOOL"],["花瓣网"],["蜂鸟摄影"],["POCO摄影"],["桌酷壁纸"],["ZOL壁纸"],["回车桌面"],
+            ["天堂图片"],["视觉中国"],["全景图片"],["太平洋摄影"],["色影无忌"],["图虫网"],["堆糖网"]
+          ]},
+        { title:"旅游·生活", color:"#16a085",
+          sub:["机票","酒店","景点","美食","地图"],
+          links:[
+            ["携程旅行","hot"],["去哪儿网","hot"],["途牛旅游"],["艺龙旅行"],["同程旅游"],["驴妈妈"],["马蜂窝","new"],
+            ["飞猪旅行"],["12306"],["航班管家"],["大众点评"],["饿了么"],["下厨房"],["豆果美食"],
+            ["安居客"],["链家网"],["搜房网"],["58同城"],["赶集网"],["百姓网"],["列表网"],
+            ["智联招聘"],["前程无忧"],["拉勾网"],["BOSS直聘"],["百度地图"],["高德地图"],["土巴兔"]
+          ]},
+        { title:"教育·汽车·女性", color:"#8e44ad",
+          sub:["考试","公开课","买车","母婴","时尚"],
+          links:[
+            ["新东方","hot"],["学而思"],["沪江网校"],["中国大学MOOC"],["网易公开课"],["作业帮","new"],["猿题库"],
+            ["考研网"],["华图教育"],["中公教育"],["汽车之家","hot"],["易车网"],["太平洋汽车"],["爱卡汽车"],
+            ["瓜子二手车"],["人人车"],["途虎养车"],["小红书"],["唯品会"],["美丽说"],["蘑菇街"],
+            ["宝宝树"],["妈妈网"],["亲宝宝"],["大姨妈"],["美柚"],["天涯社区"],["篱笆网"]
+          ]}
+    ];
+
+    var panelsEl = document.getElementById("panels");
+    sections.forEach(function(s, idx){
+        var lis = s.links.map(function(l){
+            var name = l[0], flag = l[1] || "";
+            var cls = "a" ;
+            var aClass = flag==="hot" ? "hot" : (flag==="new" ? "new" : "");
+            return '<li><a class="'+aClass+'" href="javascript:;">'+
+                   '<span class="fav" style="background:'+colorOf(name)+'">'+name.charAt(0)+'</span>'+
+                   '<span class="txt">'+name+'</span></a></li>';
+        }).join("");
+
+        var subs = s.sub.map(function(x){ return '<a href="javascript:;">'+x+'</a>'; }).join("");
+
+        var html =
+            '<div class="panel">'+
+              '<div class="panel-hd">'+
+                '<span class="bar" style="background:'+s.color+'"></span>'+
+                '<h3>'+s.title+'</h3>'+
+                '<span class="sub">'+subs+'</span>'+
+                '<span class="more">更多 &gt;&gt;</span>'+
+              '</div>'+
+              '<div class="links"><ul>'+lis+'</ul></div>'+
+            '</div>';
+        panelsEl.insertAdjacentHTML("beforeend", html);
+
+        // 在第 2 个版块后插一条横幅广告
+        if (idx === 1){
+            panelsEl.insertAdjacentHTML("beforeend",
+                '<a class="banner-ad" href="javascript:;">'+
+                  '<span class="b-txt"><b>双12全民疯抢节</b><span>每满300减50 · 12期免息 · 抢券瓜分1亿现金</span></span>'+
+                  '<span class="b-btn">马上抢 &gt;</span>'+
+                  '<span class="b-tag">广告</span>'+
+                '</a>');
+        }
+        // 在第 4 个版块后再插一条横幅广告
+        if (idx === 3){
+            panelsEl.insertAdjacentHTML("beforeend",
+                '<a class="banner-ad" href="javascript:;" style="background:linear-gradient(100deg,#2193b0,#6dd5ed)">'+
+                  '<span class="b-txt"><b>1对1在线英语外教</b><span>北美名师 · 注册即领288元试听礼包 · 学不会全额退</span></span>'+
+                  '<span class="b-btn" style="color:#2193b0">免费领课 &gt;</span>'+
+                  '<span class="b-tag">广告</span>'+
+                '</a>');
+        }
+    });
+
+    // ---------- 顶栏日期时间 ----------
+    function pad(n){ return n<10 ? "0"+n : n; }
+    function tick(){
+        var d = new Date();
+        var w = ["星期日","星期一","星期二","星期三","星期四","星期五","星期六"][d.getDay()];
+        document.getElementById("datetime").innerHTML =
+            d.getFullYear()+"年"+pad(d.getMonth()+1)+"月"+pad(d.getDate())+"日 &nbsp;"+w+
+            " &nbsp;<b>"+pad(d.getHours())+":"+pad(d.getMinutes())+":"+pad(d.getSeconds())+"</b>";
+    }
+    tick(); setInterval(tick, 1000);
+
+    // ---------- 搜索 ----------
+    function doSearch(){
+        var kw = document.getElementById("kw").value.trim();
+        if(!kw){ alert("请输入要搜索的关键词～"); return; }
+        window.open("https://www.baidu.com/s?wd="+encodeURIComponent(kw), "_blank");
+    }
+    document.getElementById("kw").addEventListener("keydown", function(e){
+        if(e.key === "Enter") doSearch();
+    });
+
+    // ---------- 设为主页（怀旧彩蛋） ----------
+    function setHome(){
+        alert("您的浏览器不支持一键设置，请手动将 hao123 设为主页：\n工具 → Internet 选项 → 主页 → 填入 hao123.com");
+    }
+</script>
+</body>
+</html>
