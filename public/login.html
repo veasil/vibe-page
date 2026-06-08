@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1024">
+<title>登录 — 协商真实 · 幻觉导航网</title>
+<link rel="stylesheet" href="era.css">
+<style>
+.auth-wrap{display:flex;justify-content:center;padding:48px 0 60px}
+.auth-card{width:380px;background:#fff;border:1px solid var(--c-border);border-radius:6px;box-shadow:0 4px 18px rgba(0,0,0,.08);overflow:hidden}
+.auth-hd{background:linear-gradient(180deg,#eaf4fe,#fff);border-bottom:1px solid #eef;padding:20px;text-align:center}
+.auth-hd .biglogo{font:900 italic 40px/1 Arial;letter-spacing:-2px}
+.auth-hd .biglogo .ha{color:var(--c-main)} .auth-hd .biglogo .num{color:var(--c-hot)}
+.auth-hd p{color:#999;font-size:12px;margin-top:6px}
+.auth-body{padding:22px}
+.auth-body label{display:block;font-size:13px;color:#555;margin:0 0 6px}
+.auth-body input{width:100%;height:40px;border:1px solid #ccc;border-radius:3px;padding:0 12px;font-size:14px;font-family:"Microsoft YaHei";outline:none}
+.auth-body input:focus{border-color:var(--c-main)}
+.auth-body .primary{width:100%;height:42px;margin-top:16px;border:none;border-radius:3px;cursor:pointer;background:linear-gradient(#3aa0f5,#2b8eea);color:#fff;font:bold 15px "Microsoft YaHei";letter-spacing:2px}
+.auth-body .primary:hover{filter:brightness(.95)}
+.auth-body .primary:disabled{opacity:.6;cursor:default}
+.auth-tip{margin-top:14px;font-size:12px;color:#999;line-height:1.8}
+.auth-tip a{color:var(--c-main)}
+.msg{margin-top:14px;padding:9px 12px;border-radius:3px;font-size:13px;display:none}
+.msg.ok{display:block;background:#f0f9eb;border:1px solid #c2e7b0;color:#5a9c2e}
+.msg.err{display:block;background:#fef0f0;border:1px solid #fbc4c4;color:#c0392b}
+.seclist{background:#fafbfc;border:1px solid #eee;border-radius:4px;padding:10px 14px;margin-top:18px;font-size:11px;color:#999;line-height:1.9}
+.seclist b{color:#666}
+.modepill{display:inline-block;font-size:11px;color:#fff;background:#ff8a00;border-radius:10px;padding:1px 8px;vertical-align:middle}
+</style>
+</head>
+<body data-theme="baidu">
+
+<div class="topbar"><div class="wrap">
+  <div><a class="set-home" href="landing.html">← 返回首页</a><span class="tz" data-clock></span></div>
+  <div><a href="javascript:;">客户端</a>|<a href="javascript:;">帮助</a></div>
+</div></div>
+
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-hd">
+      <div class="biglogo"><span class="ha">hao</span><span class="num">123</span></div>
+      <p id="subtitle">登录后即可触发新词条生成</p>
+    </div>
+    <div class="auth-body">
+      <label for="email">邮箱（将收到一封登录链接）</label>
+      <input id="email" type="email" placeholder="you@example.com" autocomplete="email">
+      <button class="primary" id="btn">发送登录链接</button>
+      <div class="msg" id="msg"></div>
+      <div class="auth-tip">
+        采用<b>无密码登录</b>（邮箱魔法链接），更安全。<br>
+        登录即同意《用户协议》。新用户首次登录自动注册。
+      </div>
+      <div class="seclist">
+        <b>安全说明</b><br>
+        · 认证由 Supabase 托管，本站不接触你的密码<br>
+        · 生成出的页面运行在<b>沙箱 iframe</b>内，无法读取你的登录态<br>
+        · 所有生成请求经服务端校验后才执行，未登录零成本
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="footer"><div class="wrap"><div class="copy">© 2010-2016 hao123.com · 协商真实</div></div></div>
+
+<script src="runtime.js"></script>
+<script>
+  var qs = new URLSearchParams(location.search);
+  var next = qs.get("next") || "/app.html";
+  if (qs.get("tab") === "register") document.getElementById("subtitle").textContent = "注册 / 登录后即可触发新词条生成";
+
+  var btn = document.getElementById("btn"), msg = document.getElementById("msg");
+  function show(type, text){ msg.className = "msg " + type; msg.innerHTML = text; }
+
+  // 登录失败回跳（?err=... 或 Supabase 把错误塞在 #hash 里）→ 友好提示并清理地址
+  (function(){
+    var hp = new URLSearchParams(location.hash.replace(/^#/, ""));
+    var reason = qs.get("err") || hp.get("error_description") || hp.get("error");
+    if (reason){
+      var expired = /expired|invalid|denied|otp/i.test(reason);
+      show("err", (expired ? "登录链接已失效或被重复打开，请重新发送一封。" : "登录失败：" + decodeURIComponent(reason)));
+      history.replaceState(null, "", location.pathname);   // 抹掉难看的 #error=...
+    }
+  })();
+
+  // 从后端拉取公开配置，判断真实 / mock
+  var cfgP = fetch("/api/config").then(function(r){ return r.json(); }).catch(function(){ return { authMode:"mock" }; });
+
+  document.getElementById("btn").addEventListener("click", async function(){
+    var email = document.getElementById("email").value.trim();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ show("err","请输入有效邮箱"); return; }
+    btn.disabled = true;
+    try {
+      var cfg = await cfgP;
+      if (cfg.authMode === "supabase"){
+        // —— 真实：Supabase 魔法链接（token_hash 方式，更稳，防邮件扫描器提前消耗 OTP）——
+        var { createBrowserClient } = await import("https://esm.sh/@supabase/ssr");
+        var sb = createBrowserClient(cfg.supabaseUrl, cfg.supabaseKey);
+        // 回跳到 /auth/confirm（token_hash + verifyOtp），再跳到意图路径
+        var redirect = location.origin + "/auth/confirm?next=" + encodeURIComponent(next);
+        var { error } = await sb.auth.signInWithOtp({
+          email,
+          options: { emailRedirectTo: redirect, shouldCreateUser: true }
+        });
+        if (error) throw error;
+        show("ok","✓ 登录链接已发送至 " + email + "，请到邮箱点击完成登录");
+      } else {
+        // —— 本地 mock：直接发放 mock token 并进入 ——
+        var uid = "u_" + btoa(unescape(encodeURIComponent(email))).replace(/=/g,"").slice(0,10);
+        localStorage.setItem("vibe_token", "mock:" + uid);
+        show("ok","✓ 本地 mock 登录成功 <span class='modepill'>MOCK</span>，正在进入…");
+        setTimeout(function(){ location.href = next; }, 800);
+      }
+    } catch(e){
+      show("err","登录失败：" + e.message);
+    } finally { btn.disabled = false; }
+  });
+  document.getElementById("email").addEventListener("keydown", function(e){ if(e.key==="Enter") btn.click(); });
+</script>
+</body>
+</html>

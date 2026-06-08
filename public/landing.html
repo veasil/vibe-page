@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1024">
+<title>协商真实 · 幻觉导航网 — 上网从这里开始</title>
+<link rel="stylesheet" href="era.css">
+<style>
+/* 落地页专属点睛（静态门面，非 LLM 生成） */
+.hero{background:linear-gradient(180deg,#eaf4fe,#f5f6f7);border-bottom:1px solid var(--c-border);padding:34px 0 28px;text-align:center}
+.hero .biglogo{font:900 italic 72px/1 Arial;letter-spacing:-3px}
+.hero .biglogo .ha{color:var(--c-main)} .hero .biglogo .num{color:var(--c-hot)}
+.hero .slogan{margin:14px 0 4px;font-size:18px;color:#333}
+.hero .slogan b{color:var(--c-main)}
+.hero .sub{color:#888;font-size:13px}
+.addrbar{margin:22px auto 6px;width:600px;display:flex;height:46px;border:2px solid var(--c-main);background:#fff;box-shadow:0 2px 6px rgba(43,142,234,.18)}
+.addrbar .scheme{background:#eef4fb;color:#888;font:13px/42px Tahoma;padding:0 10px;border-right:1px solid #e0e6ee}
+.addrbar input{flex:1;border:none;outline:none;padding:0 12px;font-size:16px;font-family:"Microsoft YaHei"}
+.addrbar button{width:130px;border:none;cursor:pointer;background:linear-gradient(#3aa0f5,#2b8eea);color:#fff;font:bold 16px "Microsoft YaHei";letter-spacing:2px}
+.addrbar button:hover{filter:brightness(.94)}
+.hint{color:#aaa;font-size:12px}
+.chips{margin-top:14px}
+.chips a{display:inline-block;margin:4px;padding:3px 12px;background:#fff;border:1px solid var(--c-border);border-radius:14px;color:#555;font-size:12px}
+.chips a:hover{border-color:var(--c-main);color:var(--c-main);text-decoration:none}
+.counter{display:inline-block;margin-top:16px;color:#999;font-size:13px}
+.counter b{color:var(--c-hot);font:bold 20px Tahoma;margin:0 4px}
+.cta a{display:inline-block;margin:0 6px;padding:7px 22px;border-radius:4px;font-size:14px;font-weight:bold}
+.cta .login{background:linear-gradient(#3aa0f5,#2b8eea);color:#fff}
+.cta .reg{background:#fff;border:1px solid var(--c-main);color:var(--c-main)}
+.cta a:hover{text-decoration:none;filter:brightness(.96)}
+.how{display:flex;gap:12px;margin:14px 0}
+.how .step{flex:1;background:#fff;border:1px solid var(--c-border);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow)}
+.how .step .no{display:inline-block;width:22px;height:22px;line-height:22px;text-align:center;background:var(--c-main);color:#fff;border-radius:50%;font:bold 12px Tahoma;margin-right:6px}
+.how .step h4{display:inline;font-size:14px;color:#222}
+.how .step p{margin-top:8px;color:#666;font-size:12px;line-height:1.8}
+.warn{background:#fffbe6;border:1px solid #ffe58f;color:#8a6d00;font-size:12px;padding:8px 12px;border-radius:3px;margin-bottom:14px}
+</style>
+</head>
+<body data-theme="baidu">
+
+<div class="topbar"><div class="wrap">
+  <div>
+    <a class="set-home" href="javascript:;" data-set-home>★ 设为主页</a>
+    <a href="javascript:;">加入收藏</a>
+    <span class="tz" data-clock></span>
+  </div>
+  <div>
+    <a href="login.html">登录</a>|<a href="login.html?tab=register">注册</a>|<a href="javascript:;">客户端</a>
+  </div>
+</div></div>
+
+<div class="hero">
+  <div class="biglogo"><span class="ha">hao</span><span class="num">123</span></div>
+  <div class="slogan">输入任意网址，AI 当场为你生成它的「<b>真实</b>」</div>
+  <div class="sub">协商真实 · 幻觉导航网 —— 一个停在 2013 年 6 月 8 日的中文互联网</div>
+
+  <form class="addrbar" onsubmit="enter(event)">
+    <span class="scheme">http://</span>
+    <input id="addr" placeholder="比如  game/lol/打野攻略   或   news/神舟十号" autocomplete="off">
+    <button type="submit">进 入 →</button>
+  </form>
+  <div class="hint">首次访问的路径会被即时生成并永久封存 —— 你看到的，就成了它唯一的真实</div>
+
+  <div class="chips">
+    热门入口：
+    <a href="javascript:;" data-go="news/神舟十号发射">神舟十号发射</a>
+    <a href="javascript:;" data-go="bbs/余额宝/讨论">余额宝吧</a>
+    <a href="javascript:;" data-go="game/穿越火线">穿越火线</a>
+    <a href="javascript:;" data-go="space/user/zhang3">张三的空间</a>
+    <a href="javascript:;" data-go="news/小米2S发布">小米2S发布</a>
+  </div>
+  <div class="counter">已封存 <b id="cnt">12,847</b> 个词条的「真实」，并仍在生长</div>
+</div>
+
+<div class="wrap" style="padding:18px 0 30px">
+  <div class="warn">⚠️ 登录后方可触发新词条生成（每日有配额，防止滥用烧钱）。已生成的词条任何人可免登录浏览。</div>
+
+  <div class="how">
+    <div class="step"><span class="no">1</span><h4>输入一个路径</h4>
+      <p>任何网址都合法：新闻、贴吧、游戏、个人空间……AI 按路径语义自己判断这是个什么页面。</p></div>
+    <div class="step"><span class="no">2</span><h4>AI 当场生成</h4>
+      <p>钉死在 2013 年的认知，用那个年代的腔调与审美，现编出一个「基本像真的」页面。</p></div>
+    <div class="step"><span class="no">3</span><h4>永久封存为真实</h4>
+      <p>第一次生成即写入存储、不可更改。此后所有人访问该路径，看到的都是这同一份「真实」。</p></div>
+  </div>
+
+  <div style="text-align:center;margin-top:8px" class="cta">
+    <a class="login" href="login.html">登录开始探索</a>
+    <a class="reg" href="login.html?tab=register">免费注册</a>
+  </div>
+</div>
+
+<div class="footer"><div class="wrap">
+  <div class="nav"><a href="javascript:;">关于</a>|<a href="javascript:;">收录词条</a>|<a href="javascript:;">意见反馈</a>|<a href="javascript:;">使用帮助</a></div>
+  <div class="copy">京ICP证030173号 · 京公网安备 11000002000001号<br>© 2010-2016 hao123.com · 一个关于「真实如何被协商」的实验</div>
+</div></div>
+
+<script src="runtime.js"></script>
+<script>
+  // 地址栏 / 热门入口：未登录一律先去登录页（生成需鉴权）
+  function goTo(slug){
+    var s = (slug||"").trim().replace(/^https?:\/\//,"").replace(/^\/+/,"");
+    if(!s){ alert("随便输入一个网址路径吧，比如 news/神舟十号"); return; }
+    // 已登录直接进 app；未登录先去登录页（带 next 回跳）
+    var target = "/app.html#/" + s;
+    if (localStorage.getItem("vibe_token")) location.href = target;
+    else location.href = "login.html?next=" + encodeURIComponent(target);
+  }
+  function enter(e){ e.preventDefault(); goTo(document.getElementById("addr").value); }
+  document.addEventListener("click", function(e){
+    var a = e.target.closest("[data-go]"); if(a) goTo(a.getAttribute("data-go"));
+  });
+  // 词条计数器：从 /api/stats 拉真实 kv.keys('page:*').length，失败用基数兜底
+  (function(){ var el=document.getElementById("cnt"), n=12847;
+    fetch("/api/stats").then(r=>r.json()).then(d=>{ if(typeof d.count==="number"){ n+=d.count; el.textContent=n.toLocaleString(); } }).catch(()=>{});
+    setInterval(function(){ if(Math.random()<.3){ n++; el.textContent=n.toLocaleString(); } },2500); })();
+</script>
+</body>
+</html>

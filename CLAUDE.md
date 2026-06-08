@@ -90,10 +90,12 @@ AI 根据路径语义推断类型，选择对应的视觉风格生成：
 - 每页包含 4-6 个内链：`<a class="inner-link" data-slug="词条名">文字</a>`
 - 已存档词条列表注入 prompt，优先作为内链引用（协商真实自引用）
 
-**输出格式**
-- 输出完整 HTML（含 `<style>` 内嵌 CSS + `<script>` 内嵌 JS）
-- 不输出任何解释或 markdown
-- 所有 CSS 必须符合层一美学约束系统
+**输出格式（效率方案 · 见 `prompts/output-contract.md`）**
+- **只输出 `<main>` 内部 HTML 片段**：不写 `<html>/<head>/<body>`，不写 `<script>`，不写大段 `<style>`（壳已提供 `public/era.css` + `public/runtime.js`）
+- 样式套用 `era.css` 的 class；重复结构用宏占位符 `[[...]]`，服务端 `lib/macros.mjs` 写入 KV 前展开
+- 仅允许一个 ≤30 行的页面级 `<style>` 点睛
+- 不输出任何解释或 markdown；CSS/交互必须符合层一美学约束
+- 收益：LLM 输出量约为整页手写的 **1/35**（实测 871B vs 30KB），叠加 prompt 缓存 + `max_tokens` 封顶
 
 ---
 
@@ -250,3 +252,42 @@ function colorOf(name){ let h=0; for(const c of name) h=(h*31+c.charCodeAt(0))&0
 - **正文 / 链接区 / 分类网格**：保持纯平、实线边框（遵守原规则）
 - **按钮 / 广告位 / 快捷图标**：允许时代化的**轻渐变 + 轻阴影**（如蓝色渐变搜索按钮、横幅渐变底、卡片 1px 投影）
 - 仍**禁止**：毛玻璃、大模糊柔光、霓虹光晕等明显现代特征
+
+---
+
+## 踩坑记录
+
+### 🔧 [2026-06-08] Next 配置键放错层级
+
+**现象**: `next dev` 启动报 `⚠ Unrecognized key(s) in object: 'outputFileTracingIncludes'`。
+**根因**: Next 14.2 该键属于 `experimental` 命名空间，写在了 `nextConfig` 顶层（14.x 与 15.x 位置不同）。
+**修复**: `next.config.mjs` 把 `outputFileTracingIncludes` 移到 `experimental` 下。
+**关键点**: 升级/查文档时注意配置键的版本归属；14.x 多数 tracing/打包键在 `experimental`，15.x 才提到顶层。
+
+### 🔧 [2026-06-08] Next 遥测跨盘崩溃 EXDEV
+
+**现象**: `next dev` 启动即崩 `Error: EXDEV: cross-device link not permitted, rename '...nextjs-nodejs\Config\config.json.xxx' -> 'config.json'`。
+**根因**: Next 遥测把配置写到 `%AppData%` 时用 `renameSync` 跨设备/挂载点改名，Windows 上该盘与临时文件不同卷即失败。
+**修复**: 启动加环境变量 `NEXT_TELEMETRY_DISABLED=1`，绕过遥测写盘。
+**关键点**: 凡是“启动即崩在 rename/telemetry”的报错，先关遥测（`NEXT_TELEMETRY_DISABLED=1`）；不要用 `next telemetry disable`（它本身也会触发同一次写盘）。
+
+### 🔧 [2026-06-08] 路由间内存状态不共享
+
+**现象**: `/api/generate` 写入内存 KV 后，`/api/stats` 读到 `count:0`；但同一路由内 cache MISS→HIT 正常。
+**根因**: Next 对每个 route 单独打包，`lib/kv.mjs` 顶层 `const _mem = new Map()` 在各路由 bundle 里各实例化一份，跨路由不共享。
+**修复**: 改为 `globalThis` 单例：`const _mem = (globalThis.__vibe_mem ||= new Map())`（`lib/kv.mjs`）。
+**关键点**: Next/serverless 下任何跨路由共享的进程内状态（缓存、连接池、计数器）都必须挂 `globalThis` 单例，否则各 bundle 各一份；生产应直接换外部存储（Vercel KV / Redis），内存方案仅 dev 兜底。
+
+### 🔧 [2026-06-08] build 与 dev 同跑污染 .next 缓存
+
+**现象**: dev server 运行中手动执行 `next build`，之后访问任意路由报 `Error: Cannot find module './948.js'`，页面白屏。
+**根因**: `next build` 覆写了 `.next/server/webpack-runtime.js` 等文件，但 dev server 进程持有的内存引用仍指向旧 chunk id，两套产物不兼容。
+**修复**: 杀掉 dev server → `rm -rf .next` → 重新 `npm run dev`。
+**关键点**: `next build` 和 `next dev` 绝不能在同一目录同时运行；需要验证生产构建时，先停 dev server，build 完再重启 dev。CI 上二者也要串行而非并行。
+
+### 🔧 [2026-06-08] Supabase 魔法链接 otp_expired
+
+**现象**: 邮件链接点击后跳回 `/login.html?err=auth#error_code=otp_expired`，始终无法登录。
+**根因**: 代码把 `emailRedirectTo` 指向 `/auth/callback`（PKCE `exchangeCodeForSession` 流程），但 Supabase 默认邮件模板发的是 `token_hash` 链接；两套流程不匹配，且邮件安全扫描器可能提前"点击"链接消耗 OTP。
+**修复**: 新建 `app/auth/confirm/route.js`（`verifyOtp({ type, token_hash })`），将 `emailRedirectTo` 改为 `/auth/confirm?next=...`；Supabase 后台 Redirect URLs 同步换成 `/auth/confirm`。
+**关键点**: Supabase SSR 邮件登录推荐用 `token_hash + verifyOtp`（对扫描器更稳健），PKCE `?code` 方式留给 OAuth 社交登录；两者回调路由不同，不能混用。

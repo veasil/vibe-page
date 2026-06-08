@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1024">
+<title>幻觉导航网</title>
+<style>
+  html,body{margin:0;height:100%;background:#f5f6f7;font-family:"Microsoft YaHei",sans-serif}
+  #frame{width:100%;height:100vh;border:0;display:block;background:#fff}
+  #loading{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;color:#888;font-size:14px;background:#f5f6f7;z-index:10}
+  #loading .dot{animation:b 1s steps(3,end) infinite}
+  @keyframes b{to{clip-path:inset(0 0 0 100%)}}
+  #err{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:11}
+  #err .box{background:#fff;border:1px solid #e3e5e8;border-radius:6px;padding:24px 30px;text-align:center;box-shadow:0 4px 18px rgba(0,0,0,.1)}
+  #err h3{color:#c0392b;margin:0 0 8px} #err a{color:#2b8eea}
+</style>
+</head>
+<body>
+<div id="loading">正在生成这一页的「真实」<span class="dot">…</span></div>
+<div id="err"><div class="box"><h3 id="et"></h3><p id="em"></p><a href="landing.html">← 返回首页</a></div></div>
+
+<!-- 红线一：生成内容跑在沙箱 iframe；不给 allow-same-origin，AI 脚本碰不到主站登录态 -->
+<iframe id="frame" sandbox="allow-scripts allow-popups" referrerpolicy="no-referrer"></iframe>
+
+<script>
+(function(){
+  "use strict";
+  var token = null;
+  var frame = document.getElementById("frame");
+  var loading = document.getElementById("loading");
+  var mode = "mock", mockToken = null;
+
+  function gotoLogin(){ location.replace("login.html?next=" + encodeURIComponent("/app.html" + location.hash)); }
+
+  // 入口：确认登录态。真实走 Supabase Cookie 会话；mock 走 localStorage。
+  async function init(){
+    var cfg = await fetch("/api/config").then(function(r){ return r.json(); }).catch(function(){ return { authMode:"mock" }; });
+    mode = cfg.authMode;
+    if (mode === "supabase"){
+      var { createBrowserClient } = await import("https://esm.sh/@supabase/ssr");
+      var sb = createBrowserClient(cfg.supabaseUrl, cfg.supabaseKey);
+      var { data } = await sb.auth.getSession();
+      if (!data.session){ gotoLogin(); return; }   // 未登录
+    } else {
+      mockToken = localStorage.getItem("vibe_token");
+      if (!mockToken){ gotoLogin(); return; }
+    }
+    window.addEventListener("hashchange", load);
+    load();
+  }
+  init();
+
+  function showErr(t, m){
+    document.getElementById("et").textContent = t;
+    document.getElementById("em").textContent = m;
+    document.getElementById("err").style.display = "flex";
+    loading.style.display = "none";
+  }
+  function currentSlug(){
+    // 统一用 hash 路由：/app.html#/game/lol；无 hash = 首页
+    return location.hash.replace(/^#\/?/, "");
+  }
+  function isHome(s){ return !s; }
+
+  async function load(){
+    document.getElementById("err").style.display = "none";
+    loading.style.display = "flex";
+    var slug = currentSlug();
+    var body = isHome(slug) ? { type:"home" } : { type:"page", path: slug };
+    try {
+      var headers = { "Content-Type":"application/json" };
+      if (mode === "mock") headers["Authorization"] = "Bearer " + mockToken;  // 真实模式靠 Cookie
+      var res = await fetch("/api/generate", {
+        method:"POST", headers, credentials:"same-origin",
+        body: JSON.stringify(body),
+      });
+      if (res.status === 401){ gotoLogin(); return; }
+      if (res.status === 429){ showErr("今日配额已用尽", "新词条生成已达上限，明天再来，或浏览已封存的词条。"); return; }
+      if (!res.ok){ showErr("生成失败", "服务暂时不可用（" + res.status + "）"); return; }
+      var html = await res.text();
+      // 用 srcdoc 注入沙箱；iframe 内的 runtime.js 通过 postMessage 通知导航
+      frame.srcdoc = html;
+      frame.onload = function(){ loading.style.display = "none"; };
+    } catch(e){ showErr("网络错误", e.message); }
+  }
+
+  // 内链导航：只信任来自本 iframe 的 vibe:navigate 消息，校验后改 hash 再加载
+  window.addEventListener("message", function(e){
+    if (e.source !== frame.contentWindow) return;          // 只认自己的 iframe
+    var d = e.data || {};
+    if (d.type !== "vibe:navigate") return;
+    var slug = String(d.slug || "").replace(/^https?:\/\//,"").replace(/^\/+/,"").slice(0,120);
+    if (!slug) return;
+    location.hash = "/" + slug;                              // 触发 hashchange → load()
+  });
+})();
+</script>
+</body>
+</html>

@@ -39,9 +39,10 @@ AI 根据路径语义推断类型，选择对应的视觉风格生成：
 - 已存档词条列表注入 prompt，优先作为内链引用（协商真实自引用）
 
 ## 输出格式
-- 输出完整 HTML（含 `<style>` 内嵌 CSS + `<script>` 内嵌 JS）
-- 不输出任何解释或 markdown
-- 所有 CSS 必须符合层一美学约束系统（见 `prompts/aesthetic.md`）
+> ⚠️ 输出契约已迁移到效率方案，详见 `prompts/output-contract.md`（优先级最高）。要点：
+- **只输出 `<main>` 内部片段**，不写 `<html>/<head>/<body>`、不写 `<script>`、不写大段 `<style>`
+- 样式用 `era.css` 的 class，重复结构用宏 `[[...]]`（壳会提供 era.css + runtime.js 并展开宏）
+- 不输出任何解释或 markdown；内链用 `[[INNER:slug|文字]]` 或 `<a class="inner-link" data-slug>`
 
 ---
 
