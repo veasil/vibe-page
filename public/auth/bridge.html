@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1024">
+<title>完成登录 — 协商真实</title>
+<link rel="stylesheet" href="/era.css">
+<style>
+body{display:flex;flex-direction:column;min-height:100vh;background:#f5f6f7}
+.center{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 0}
+.card{width:480px;background:#fff;border:1px solid var(--c-border);border-radius:6px;
+  box-shadow:0 4px 18px rgba(0,0,0,.08);overflow:hidden}
+.card-hd{background:linear-gradient(180deg,#eaf4fe,#fff);border-bottom:1px solid #eee;
+  padding:22px;text-align:center}
+.card-hd .logo{font:900 italic 36px/1 Arial;letter-spacing:-2px}
+.card-hd .logo .ha{color:var(--c-main)} .card-hd .logo .num{color:var(--c-hot)}
+.card-hd p{color:#888;font-size:12px;margin-top:6px}
+.card-bd{padding:24px}
+
+/* 正常 relay 码模式 */
+#mode-relay{display:none}
+.code-box{background:#f8fafc;border:2px solid var(--c-main);border-radius:4px;
+  padding:18px;text-align:center;margin:16px 0}
+.code-box .big-code{font:900 32px/1 "Courier New",monospace;letter-spacing:6px;
+  color:var(--c-main)}
+.code-box .sub{color:#888;font-size:12px;margin-top:6px}
+.relay-url{word-break:break-all;background:#f0f4f8;border:1px solid #dce4ec;
+  border-radius:3px;padding:10px 12px;font-size:13px;color:#444;margin:12px 0;
+  font-family:"Courier New",monospace}
+.btn-primary{display:block;width:100%;height:46px;margin-top:4px;border:none;
+  border-radius:3px;cursor:pointer;background:linear-gradient(#3aa0f5,#2b8eea);
+  color:#fff;font:bold 16px "Microsoft YaHei";letter-spacing:2px;text-decoration:none;
+  line-height:46px;text-align:center}
+.btn-primary:hover{filter:brightness(.94);text-decoration:none}
+.btn-copy{display:inline-block;padding:5px 14px;margin-top:8px;background:#fff;
+  border:1px solid var(--c-border);border-radius:3px;font-size:12px;color:#555;cursor:pointer}
+.btn-copy:hover{border-color:var(--c-main);color:var(--c-main)}
+.note{font-size:12px;color:#999;line-height:1.8;margin-top:14px;
+  border-top:1px dashed #eee;padding-top:12px}
+.note b{color:#666}
+.countdown{font-size:12px;color:#bbb;margin-top:10px;text-align:center}
+.countdown b{color:var(--c-new)}
+
+/* 隐式流模式 */
+#mode-implicit{display:none;text-align:center;padding:10px 0 4px}
+#mode-implicit p{color:#666;font-size:14px;line-height:2}
+
+/* 过期/错误 */
+#mode-expired{display:none;text-align:center;padding:10px 0 4px}
+#mode-expired p{color:var(--c-hot);font-size:14px;margin-bottom:12px}
+</style>
+</head>
+<body data-theme="baidu">
+<div class="topbar"><div class="wrap">
+  <div><a href="/landing.html">← 返回首页</a></div>
+</div></div>
+
+<div class="center"><div class="card">
+  <div class="card-hd">
+    <div class="logo"><span class="ha">hao</span><span class="num">123</span></div>
+    <p>协商真实 · 幻觉导航网</p>
+  </div>
+  <div class="card-bd">
+
+    <!-- 模式 A：relay 码，在此浏览器直接完成 或 复制到 Edge -->
+    <div id="mode-relay">
+      <div style="font-size:14px;color:#333;font-weight:bold;margin-bottom:4px">✅ 邮件验证成功</div>
+      <div style="font-size:12px;color:#888;margin-bottom:12px">
+        如果你已在目标浏览器（Edge），点下方按钮直接完成登录。<br>
+        如果你在<b>邮件客户端内置浏览器</b>里看到这个页面，请把下面的链接复制到 Edge 打开。
+      </div>
+
+      <div class="code-box">
+        <div class="big-code" id="rcDisplay">——</div>
+        <div class="sub">登录中转码（5分钟内有效）</div>
+      </div>
+
+      <a id="relayBtn" class="btn-primary" href="#">在此浏览器完成登录</a>
+
+      <div style="margin-top:14px;font-size:12px;color:#888">或复制以下链接到你的浏览器：</div>
+      <div class="relay-url" id="relayUrlBox">—</div>
+      <button class="btn-copy" onclick="copyUrl()">📋 复制链接</button>
+
+      <div class="note">
+        <b>为什么要这一步？</b><br>
+        你的邮件客户端在自己的内置浏览器里打开了链接，登录状态停留在那个浏览器里。
+        把上面的链接复制到 Edge 打开，Edge 才能拿到登录态。
+      </div>
+      <div class="countdown">登录链接将在 <b id="timer">5:00</b> 后失效</div>
+    </div>
+
+    <!-- 模式 B：隐式流，JS 处理 hash token -->
+    <div id="mode-implicit">
+      <p>正在处理登录…<br><small style="color:#bbb">如页面长时间不跳转，请返回重新发送邮件</small></p>
+    </div>
+
+    <!-- 模式 C：过期或错误 -->
+    <div id="mode-expired">
+      <p id="expiredMsg">登录链接已过期</p>
+      <a class="btn-primary" href="/login.html">重新发送登录邮件</a>
+    </div>
+
+  </div>
+</div></div>
+
+<div class="footer"><div class="wrap"><div class="copy">© 2010-2016 hao123.com · 协商真实</div></div></div>
+
+<script>
+var qs = new URLSearchParams(location.search);
+var code = qs.get("code");
+var mode = qs.get("mode");
+var next = qs.get("next") || "/app.html";
+
+function show(id){ ["mode-relay","mode-implicit","mode-expired"].forEach(function(x){ document.getElementById(x).style.display = x===id?"block":"none"; }); }
+
+if (code){
+  // ——— 模式 A：服务端已验证，展示 relay 链接 ———
+  show("mode-relay");
+  document.getElementById("rcDisplay").textContent = code;
+  var relayUrl = location.origin + "/auth/relay?code=" + code;
+  document.getElementById("relayUrlBox").textContent = relayUrl;
+  document.getElementById("relayBtn").href = relayUrl;
+
+  // 倒计时 5 分钟
+  var secs = 300;
+  var ti = setInterval(function(){
+    secs--;
+    if (secs <= 0){ clearInterval(ti); show("mode-expired"); document.getElementById("expiredMsg").textContent="登录链接已过期，请重新发送邮件。"; return; }
+    var m = Math.floor(secs/60), s = secs%60;
+    document.getElementById("timer").textContent = m + ":" + (s<10?"0":"")+s;
+  }, 1000);
+
+} else if (mode === "implicit"){
+  // ——— 模式 B：hash fragment 隐式流 ———
+  show("mode-implicit");
+  // 读取 Supabase 塞在 #hash 里的 access_token/refresh_token
+  var hp = new URLSearchParams(location.hash.replace(/^#/,""));
+  var at = hp.get("access_token"), rt = hp.get("refresh_token");
+  if (at && rt){
+    // POST 到服务端存成 relay，然后当成 relay 码流程继续
+    fetch("/auth/store-tokens", {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ access_token:at, refresh_token:rt, next:next })
+    }).then(function(r){ return r.json(); }).then(function(d){
+      if (d.code){ location.replace("/auth/bridge.html?code="+d.code); }
+      else { show("mode-expired"); document.getElementById("expiredMsg").textContent="登录处理失败，请重新发送邮件。"; }
+    }).catch(function(){ show("mode-expired"); });
+  } else {
+    show("mode-expired");
+    document.getElementById("expiredMsg").textContent = "未收到登录凭据，请重新发送邮件。";
+  }
+
+} else {
+  show("mode-expired");
+}
+
+function copyUrl(){
+  var url = document.getElementById("relayUrlBox").textContent;
+  navigator.clipboard.writeText(url).then(function(){
+    var btn = document.querySelector(".btn-copy");
+    btn.textContent = "✅ 已复制";
+    setTimeout(function(){ btn.textContent = "📋 复制链接"; }, 2000);
+  });
+}
+</script>
+</body>
+</html>
