@@ -7,16 +7,82 @@
 <style>
   html,body{margin:0;height:100%;background:#f5f6f7;font-family:"Microsoft YaHei",sans-serif}
   #frame{width:100%;height:100vh;border:0;display:block;background:#fff}
-  #loading{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;color:#888;font-size:14px;background:#f5f6f7;z-index:10}
-  #loading .dot{animation:b 1s steps(3,end) infinite}
-  @keyframes b{to{clip-path:inset(0 0 0 100%)}}
+  /* —— era 风格生成骨架（替代白屏等待，模拟 2013 门户逐块加载） —— */
+  #loading{position:fixed;inset:0;display:none;justify-content:center;align-items:flex-start;
+    overflow:hidden;background:#f5f5f5;z-index:10;font-family:"Microsoft YaHei",sans-serif}
+  .sk-page{width:1000px;max-width:100%;min-height:100%;background:#fff;position:relative;
+    border-left:1px solid #ccc;border-right:1px solid #ccc}
+  /* 整页扫光 */
+  .sk-page::after{content:"";position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(100deg,transparent 35%,rgba(255,255,255,.6) 50%,transparent 65%);
+    transform:translateX(-100%);animation:sweep 1.25s linear infinite}
+  @keyframes sweep{to{transform:translateX(100%)}}
+  /* 逐块浮现 */
+  .sk-sec{animation:rise .45s both}
+  @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .bar{background:#e7e9ec;border-radius:2px}
+  /* 顶栏 */
+  .sk-top{height:28px;background:#f0f1f3;border-bottom:1px solid #e3e5e8;display:flex;
+    align-items:center;justify-content:space-between;padding:0 12px;font-size:12px;color:#999}
+  .sk-top .now{color:#c0392b}
+  /* 头部 logo + 搜索 */
+  .sk-head{display:flex;align-items:center;gap:18px;padding:20px 22px}
+  .sk-logo{width:150px;height:42px}
+  .sk-search{flex:1;height:38px;border:2px solid #cfe0f3;border-radius:3px}
+  .sk-sbtn{width:96px;height:38px;background:#cfe0f3;border-radius:3px}
+  /* 通栏广告位（转圈占位） */
+  .sk-ad{margin:0 22px 16px;height:70px;border:1px dashed #ccc;border-radius:3px;
+    display:flex;align-items:center;justify-content:center;gap:8px;color:#bbb;font-size:12px;
+    background:repeating-linear-gradient(45deg,#fafafa,#fafafa 10px,#f4f4f4 10px,#f4f4f4 20px)}
+  .spin{width:14px;height:14px;border:2px solid #ddd;border-top-color:#bbb;border-radius:50%;
+    animation:rot .8s linear infinite}
+  @keyframes rot{to{transform:rotate(360deg)}}
+  /* 快捷宫格 */
+  .sk-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:10px;padding:0 22px 18px}
+  .sk-grid i{height:18px;display:block}
+  /* 主体两栏 */
+  .sk-main{display:flex;gap:16px;padding:0 22px 30px}
+  .sk-left{flex:1}.sk-right{width:240px}
+  .sk-block{border:1px solid #eee;border-radius:3px;margin-bottom:14px;overflow:hidden}
+  .sk-block .hd{height:30px;background:#f7f8fa;border-bottom:1px solid #eee;display:flex;align-items:center;padding:0 10px}
+  .sk-block .hd b{width:4px;height:14px;border-radius:1px;margin-right:8px}
+  .sk-block .hd .t{width:78px;height:12px}
+  .sk-links{display:grid;grid-template-columns:repeat(4,1fr);gap:9px 14px;padding:12px 12px}
+  .sk-links i{height:12px;display:block}
+  .sk-right .sk-ad2{height:200px;border:1px dashed #ccc;border-radius:3px;margin-bottom:14px;
+    display:flex;align-items:center;justify-content:center;gap:8px;color:#bbb;font-size:12px;
+    background:repeating-linear-gradient(45deg,#fafafa,#fafafa 10px,#f4f4f4 10px,#f4f4f4 20px)}
+  .c-b{background:#2b8eea}.c-r{background:#e60012}.c-o{background:#ff6600}.c-g{background:#00a854}.c-p{background:#7a5cd0}
   #err{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:11}
   #err .box{background:#fff;border:1px solid #e3e5e8;border-radius:6px;padding:24px 30px;text-align:center;box-shadow:0 4px 18px rgba(0,0,0,.1)}
   #err h3{color:#c0392b;margin:0 0 8px} #err a{color:#2b8eea}
 </style>
 </head>
 <body>
-<div id="loading">正在生成这一页的「真实」<span class="dot">…</span></div>
+<div id="loading"><div class="sk-page">
+  <div class="sk-top sk-sec" style="animation-delay:0s">
+    <span>设为主页 ｜ 加入收藏</span>
+    <span class="now">正在生成「<span id="sk-what">这一页</span>」的真实…</span>
+  </div>
+  <div class="sk-head sk-sec" style="animation-delay:.05s">
+    <div class="bar sk-logo"></div><div class="sk-search"></div><div class="sk-sbtn"></div>
+  </div>
+  <div class="sk-ad sk-sec" style="animation-delay:.1s"><span class="spin"></span>广告加载中…</div>
+  <div class="sk-grid sk-sec" data-cells="12" style="animation-delay:.15s"></div>
+  <div class="sk-main">
+    <div class="sk-left">
+      <div class="sk-block sk-sec" style="animation-delay:.2s"><div class="hd"><b class="c-b"></b><span class="bar t"></span></div><div class="sk-links" data-cells="20"></div></div>
+      <div class="sk-block sk-sec" style="animation-delay:.3s"><div class="hd"><b class="c-r"></b><span class="bar t"></span></div><div class="sk-links" data-cells="16"></div></div>
+      <div class="sk-block sk-sec" style="animation-delay:.4s"><div class="hd"><b class="c-o"></b><span class="bar t"></span></div><div class="sk-links" data-cells="16"></div></div>
+      <div class="sk-block sk-sec" style="animation-delay:.5s"><div class="hd"><b class="c-g"></b><span class="bar t"></span></div><div class="sk-links" data-cells="12"></div></div>
+    </div>
+    <div class="sk-right">
+      <div class="sk-block sk-sec" style="animation-delay:.25s"><div class="hd"><b class="c-o"></b><span class="bar t"></span></div><div class="sk-links" data-cells="6" style="grid-template-columns:repeat(2,1fr)"></div></div>
+      <div class="sk-ad2 sk-sec" style="animation-delay:.35s"><span class="spin"></span>广告</div>
+      <div class="sk-block sk-sec" style="animation-delay:.45s"><div class="hd"><b class="c-p"></b><span class="bar t"></span></div><div class="sk-links" data-cells="8" style="grid-template-columns:repeat(2,1fr)"></div></div>
+    </div>
+  </div>
+</div></div>
 <div id="err"><div class="box"><h3 id="et"></h3><p id="em"></p><a href="landing.html">← 返回首页</a></div></div>
 
 <!-- 红线一：生成内容跑在沙箱 iframe；不给 allow-same-origin，AI 脚本碰不到主站登录态 -->
@@ -31,6 +97,16 @@
   var mode = "mock", mockToken = null;
 
   function gotoLogin(){ location.replace("login.html?next=" + encodeURIComponent("/app.html" + location.hash)); }
+
+  // 骨架：把 [data-cells=N] 容器填上 N 个灰条占位（避免在 HTML 里手写上百个 div）
+  (function fillSkeleton(){
+    var hosts = document.querySelectorAll("#loading [data-cells]");
+    for (var h = 0; h < hosts.length; h++){
+      var n = +hosts[h].getAttribute("data-cells") || 0, frag = document.createDocumentFragment();
+      for (var i = 0; i < n; i++){ var b = document.createElement("i"); b.className = "bar"; frag.appendChild(b); }
+      hosts[h].appendChild(frag);
+    }
+  })();
 
   // 入口：确认登录态。真实走 Supabase Cookie 会话；mock 走 localStorage。
   async function init(){
@@ -58,7 +134,8 @@
   }
   function currentSlug(){
     // 统一用 hash 路由：/app.html#/game/lol；无 hash = 首页
-    return location.hash.replace(/^#\/?/, "");
+    var s = location.hash.replace(/^#\/?/, "");
+    try { return decodeURIComponent(s); } catch(e){ return s; }  // KV key 用原文，别存 %E7%A5%9E
   }
   function isHome(s){ return !s; }
 
@@ -66,7 +143,11 @@
     document.getElementById("err").style.display = "none";
     loading.style.display = "flex";
     var slug = currentSlug();
-    var body = isHome(slug) ? { type:"home" } : { type:"page", path: slug };
+    var body, what;
+    if (isHome(slug)) { body = { type:"home" }; what = "首页"; }
+    else if (slug.indexOf("search/") === 0) { body = { type:"search", query: slug.slice(7) }; what = "搜索:" + slug.slice(7); }  // 幻觉搜索，不缓存
+    else { body = { type:"page", path: slug }; what = slug; }
+    document.getElementById("sk-what").textContent = what.slice(0, 24);
     try {
       var headers = { "Content-Type":"application/json" };
       if (mode === "mock") headers["Authorization"] = "Bearer " + mockToken;  // 真实模式靠 Cookie
@@ -76,8 +157,13 @@
       });
       if (res.status === 401){ gotoLogin(); return; }
       if (res.status === 429){ showErr("今日配额已用尽", "新词条生成已达上限，明天再来，或浏览已封存的词条。"); return; }
-      if (!res.ok){ showErr("生成失败", "服务暂时不可用（" + res.status + "）"); return; }
+      if (!res.ok){ showErr("生成失败", "服务暂时不可用（" + res.status + "）。若本机开了代理（如 Clash），请让它绕过 localhost/127.0.0.1。"); return; }
       var html = await res.text();
+      // 防御：200 但 body 为空/过短（被代理或网络截断的典型表现）→ 报错而非塞空白进 iframe 造成神秘白屏
+      if (!html || html.replace(/\s/g, "").length < 40){
+        showErr("生成结果为空", "服务返回了空内容（常见于本机代理拦截 localhost）。请让代理绕过 127.0.0.1，或暂时关闭代理后重试。");
+        return;
+      }
       // 用 srcdoc 注入沙箱；iframe 内的 runtime.js 通过 postMessage 通知导航
       frame.srcdoc = html;
       frame.onload = function(){ loading.style.display = "none"; };
@@ -85,13 +171,26 @@
   }
 
   // 内链导航：只信任来自本 iframe 的 vibe:navigate 消息，校验后改 hash 再加载
+  //   · slug 前导 "/" = 绝对路径（直达该词条，全站唯一）
+  //   · 否则 = 相对路径，追加为【当前页的子路径】，由此形成词条树（协商真实按路径封存）
+  //   · 当前在搜索页时不作父节点（搜索是临时视图，结果链接落到顶层）
   window.addEventListener("message", function(e){
     if (e.source !== frame.contentWindow) return;          // 只认自己的 iframe
     var d = e.data || {};
     if (d.type !== "vibe:navigate") return;
-    var slug = String(d.slug || "").replace(/^https?:\/\//,"").replace(/^\/+/,"").slice(0,120);
-    if (!slug) return;
-    location.hash = "/" + slug;                              // 触发 hashchange → load()
+    var raw = String(d.slug || "").replace(/^https?:\/\//, "").trim();
+    if (!raw) return;
+    var resolved;
+    if (raw.charAt(0) === "/"){
+      resolved = raw.replace(/^\/+/, "");                   // 绝对
+    } else {
+      var cur = currentSlug();
+      var base = (cur && cur.indexOf("search/") !== 0) ? cur : "";   // 搜索页不当父节点
+      resolved = (base ? base + "/" : "") + raw;            // 相对：当前路径下的子页面
+    }
+    resolved = resolved.replace(/\/{2,}/g, "/").replace(/^\/+/, "").slice(0, 200);
+    if (!resolved) return;
+    location.hash = "/" + resolved;                         // 触发 hashchange → load()
   });
 })();
 </script>

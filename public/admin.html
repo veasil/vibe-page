@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1024">
+<title>开发者控制台 — 协商真实</title>
+<style>
+  :root{--main:#2b8eea;--hot:#e60012;--bd:#ccc;--mut:#888}
+  *{box-sizing:border-box}
+  body{margin:0;background:#eef1f4;font:13px/1.6 "Microsoft YaHei",Tahoma,sans-serif;color:#333}
+  .topbar{height:34px;background:#2b3a4a;color:#cfe0f3;display:flex;align-items:center;
+    justify-content:space-between;padding:0 16px;font-size:12px}
+  .topbar b{color:#fff} .topbar a{color:#9fd0ff;text-decoration:none}
+  .wrap{max-width:1080px;margin:18px auto;padding:0 16px}
+  .tokbar{display:flex;gap:8px;align-items:center;margin-bottom:14px;font-size:12px;color:var(--mut)}
+  .tokbar input{height:30px;border:1px solid var(--bd);border-radius:3px;padding:0 8px;width:220px;font-family:inherit}
+  .btn{height:30px;border:1px solid #2b8eea;background:linear-gradient(#3aa0f5,#2b8eea);color:#fff;
+    border-radius:3px;padding:0 14px;cursor:pointer;font:bold 12px "Microsoft YaHei"}
+  .btn.ghost{background:#fff;color:#2b8eea}
+  .btn:disabled{opacity:.5;cursor:default}
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}
+  .card{background:#fff;border:1px solid #e1e5ea;border-radius:5px;padding:14px}
+  .card .k{font-size:12px;color:var(--mut)} .card .v{font-size:24px;font-weight:700;margin-top:4px}
+  .card .v small{font-size:12px;color:var(--mut);font-weight:400}
+  .panel{background:#fff;border:1px solid #e1e5ea;border-radius:5px;margin-bottom:14px;overflow:hidden}
+  .panel .hd{background:#f7f8fa;border-bottom:1px solid #eceef1;padding:9px 14px;font-weight:700}
+  .panel .hd b{display:inline-block;width:4px;height:14px;background:var(--main);border-radius:1px;
+    vertical-align:-2px;margin-right:8px}
+  .panel .bd{padding:14px}
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  th,td{text-align:left;padding:7px 10px;border-bottom:1px solid #f0f1f3}
+  th{color:var(--mut);font-weight:400;background:#fafbfc}
+  .pill{display:inline-block;padding:1px 8px;border-radius:10px;font-size:11px;font-weight:700}
+  .pill.on{background:#fdecec;color:var(--hot)} .pill.real{background:#e9f4ff;color:var(--main)}
+  .pill.gray{background:#eef0f2;color:#777}
+  /* 开关 */
+  .switch{display:flex;align-items:center;gap:12px;padding:6px 0}
+  .toggle{position:relative;width:52px;height:28px;border-radius:14px;background:#ccd2d8;cursor:pointer;
+    transition:background .2s;flex:none}
+  .toggle.on{background:var(--hot)}
+  .toggle::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;
+    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:left .2s}
+  .toggle.on::after{left:27px}
+  .warn{background:#fff8e6;border:1px solid #ffe08a;color:#9a6a00;padding:8px 12px;border-radius:4px;
+    font-size:12px;margin-top:8px}
+  .entry{display:inline-flex;align-items:center;margin:3px 8px 3px 0;border:1px solid #eceef1;
+    border-radius:4px;overflow:hidden;font-size:12px}
+  .entry a{color:var(--main);text-decoration:none;padding:3px 8px} .entry a:hover{background:#f2f8ff}
+  .entry .del{border:none;border-left:1px solid #eceef1;background:#fff;color:var(--hot);
+    cursor:pointer;padding:3px 9px} .entry .del:hover{background:#fdecec}
+  .home-btn{float:right;font-weight:400;border:1px solid #e3b4b4;background:#fff;color:var(--hot);
+    cursor:pointer;border-radius:3px;padding:2px 12px;font-size:12px} .home-btn:hover{background:#fdecec}
+  .muted{color:var(--mut)} .empty{color:#aaa;padding:8px 2px}
+  #msg{font-size:12px;margin-left:6px}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <span><b>协商真实</b> · 开发者控制台</span>
+  <span><a href="/app.html">→ 进应用</a> &nbsp; <a href="/landing.html">落地页</a></span>
+</div>
+
+<div class="wrap">
+  <div class="tokbar">
+    <span>admin token：</span>
+    <input id="tok" type="password" placeholder="未配置则留空">
+    <button class="btn ghost" id="refresh">刷新</button>
+    <span id="msg" class="muted"></span>
+  </div>
+
+  <!-- 概况 -->
+  <div class="grid">
+    <div class="card"><div class="k">LLM Provider</div><div class="v" id="c-provider">—</div></div>
+    <div class="card"><div class="k">登录模式</div><div class="v" id="c-authmode">—</div></div>
+    <div class="card"><div class="k">KV 后端</div><div class="v" id="c-kv">—</div></div>
+    <div class="card"><div class="k">每日配额</div><div class="v" id="c-quota">—</div></div>
+  </div>
+
+  <!-- 登录 mock 开关 -->
+  <div class="panel">
+    <div class="hd"><b></b>登录鉴权开关</div>
+    <div class="bd">
+      <div class="switch">
+        <div class="toggle" id="tg"></div>
+        <div>
+          <div><strong>强制 mock 登录</strong>（免验证码，任意邮箱 + 任意 6 位码即可进）</div>
+          <div class="muted" id="tg-state">—</div>
+        </div>
+      </div>
+      <div class="warn" id="tg-warn" style="display:none"></div>
+    </div>
+  </div>
+
+  <!-- 生成统计 -->
+  <div class="panel">
+    <div class="hd"><b></b>生成统计（累计）</div>
+    <div class="bd">
+      <div class="grid" style="margin:0">
+        <div class="card"><div class="k">总生成次数</div><div class="v" id="g-count">—</div></div>
+        <div class="card"><div class="k">今日生成</div><div class="v" id="g-today">—</div></div>
+        <div class="card"><div class="k">Token（入 / 出）</div><div class="v" id="g-tok" style="font-size:18px">—</div></div>
+        <div class="card"><div class="k">累计估算成本</div><div class="v" id="g-cost">—</div></div>
+      </div>
+      <div class="muted" style="margin-top:8px;font-size:11px">
+        * 仅统计真实生成（缓存命中零成本不计）；成本按 provider 粗估价计算，仅供参考。
+      </div>
+    </div>
+  </div>
+
+  <!-- 配额用量 -->
+  <div class="panel">
+    <div class="hd"><b></b>配额用量（按用户 · 当日）</div>
+    <div class="bd"><table id="quota-tb"><thead><tr><th>用户</th><th>日期</th><th>已用</th></tr></thead>
+      <tbody><tr><td colspan="3" class="empty">加载中…</td></tr></tbody></table></div>
+  </div>
+
+  <!-- 已封存词条 -->
+  <div class="panel">
+    <div class="hd"><b></b>已封存词条 <span class="muted" id="e-count"></span>
+      <button class="home-btn" id="clearHome" style="display:none">清除首页缓存（重生成）</button>
+    </div>
+    <div class="bd">
+      <div class="muted" style="font-size:11px;margin-bottom:8px">
+        点「删」下架某词条；删后该路径下次访问会按当前规则重新生成新「真实」。用于审核违规/低质 UGC。
+      </div>
+      <div id="entries"><span class="empty">加载中…</span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var TOKKEY = "vibe_admin_token";
+  var tokEl = document.getElementById("tok");
+  tokEl.value = localStorage.getItem(TOKKEY) || "";
+
+  function headers(){ var t = tokEl.value.trim(); return t ? { "x-admin-token": t } : {}; }
+  function setMsg(t, err){ var el=document.getElementById("msg"); el.textContent=t||""; el.style.color=err?"#e60012":"#888"; }
+
+  function fmt(n){ return (n||0).toLocaleString("en-US"); }
+
+  async function load(){
+    setMsg("加载中…");
+    try {
+      var r = await fetch("/api/admin", { headers: headers() });
+      if (r.status === 401){ setMsg("admin token 无效或缺失", true); return; }
+      if (!r.ok){ setMsg("请求失败 " + r.status, true); return; }
+      var d = await r.json();
+      localStorage.setItem(TOKKEY, tokEl.value.trim());
+      render(d);
+      setMsg("已更新 " + new Date().toLocaleTimeString());
+    } catch(e){ setMsg("网络错误：" + e.message + "（本机代理需绕过 localhost）", true); }
+  }
+
+  function render(d){
+    // 概况
+    var prov = d.env.provider;
+    document.getElementById("c-provider").innerHTML =
+      '<span class="pill ' + (prov==="mock"?"gray":"real") + '">' + prov + '</span>';
+    document.getElementById("c-authmode").innerHTML =
+      '<span class="pill ' + (d.env.authMode==="supabase"?"real":"on") + '">' + d.env.authMode + '</span>';
+    document.getElementById("c-kv").innerHTML =
+      '<span class="pill ' + (d.env.kvBackend==="upstash"?"real":"gray") + '">' + d.env.kvBackend + '</span>';
+    document.getElementById("c-quota").textContent = d.env.quotaDaily + " / 人/天";
+
+    // 开关
+    var tg = document.getElementById("tg");
+    tg.classList.toggle("on", d.flags.authForceMock);
+    document.getElementById("tg-state").textContent =
+      "当前：" + (d.flags.effective ? "已强制 mock（生效中）" :
+        (d.flags.authForceMock ? "拨到 mock 但被环境锁定" : "跟随环境配置（" + d.env.authMode + "）"));
+    var warn = document.getElementById("tg-warn");
+    if (!d.flags.overrideAllowed){
+      warn.style.display = "block";
+      warn.textContent = "⚠ 当前环境（生产）已锁定 auth override，开关不生效；如确需生产 mock，设 ALLOW_AUTH_OVERRIDE=1。";
+    } else warn.style.display = "none";
+
+    // 生成统计
+    document.getElementById("g-count").textContent = fmt(d.gen.count);
+    document.getElementById("g-today").textContent = fmt(d.gen.today);
+    document.getElementById("g-tok").innerHTML = fmt(d.gen.tokIn) + ' <small>/ ' + fmt(d.gen.tokOut) + '</small>';
+    document.getElementById("g-cost").innerHTML = '$' + (d.gen.costUsd||0).toFixed(4);
+
+    // 配额
+    var tb = document.querySelector("#quota-tb tbody");
+    if (!d.quota.length){ tb.innerHTML = '<tr><td colspan="3" class="empty">暂无</td></tr>'; }
+    else tb.innerHTML = d.quota.map(function(q){
+      return '<tr><td>' + esc(q.user) + '</td><td class="muted">' + esc(q.day) +
+        '</td><td><b>' + q.used + '</b> / ' + d.env.quotaDaily + '</td></tr>';
+    }).join("");
+
+    // 首页缓存清除按钮
+    document.getElementById("clearHome").style.display = d.env.homeCached ? "" : "none";
+
+    // 词条
+    document.getElementById("e-count").textContent = "（共 " + d.entries.count + "）";
+    var box = document.getElementById("entries");
+    if (!d.entries.list.length){ box.innerHTML = '<span class="empty">暂无（去应用里触发几个词条）</span>'; }
+    else box.innerHTML = d.entries.list.map(function(s){
+      var u = "/app.html#/" + s.split("/").map(encodeURIComponent).join("/");
+      return '<span class="entry"><a href="' + u + '" target="_blank">' + esc(s) +
+        '</a><button class="del" data-del="' + esc(s) + '" title="下架此词条">删</button></span>';
+    }).join("");
+  }
+
+  // 删除 / 清首页（DELETE）
+  async function del(body, confirmMsg){
+    if (!confirm(confirmMsg)) return;
+    setMsg("处理中…");
+    try {
+      var r = await fetch("/api/admin", {
+        method: "DELETE",
+        headers: Object.assign({ "Content-Type":"application/json" }, headers()),
+        body: JSON.stringify(body),
+      });
+      if (!r.ok){ setMsg("操作失败 " + r.status, true); return; }
+      await load();
+    } catch(e){ setMsg("网络错误：" + e.message, true); }
+  }
+  document.getElementById("entries").addEventListener("click", function(e){
+    var btn = e.target.closest && e.target.closest("[data-del]");
+    if (!btn) return;
+    var slug = btn.getAttribute("data-del");
+    del({ slug: slug }, "下架词条「" + slug + "」？\n删后该路径下次访问会重新生成新内容。");
+  });
+  document.getElementById("clearHome").addEventListener("click", function(){
+    del({ clearHome: true }, "清除首页缓存？\n下次访问首页会按当前规则重新生成。");
+  });
+
+  function esc(s){ return String(s).replace(/[&<>"]/g, function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+
+  // 切换开关
+  document.getElementById("tg").addEventListener("click", async function(){
+    var next = !this.classList.contains("on");
+    setMsg("切换中…");
+    try {
+      var r = await fetch("/api/admin", {
+        method:"POST",
+        headers: Object.assign({ "Content-Type":"application/json" }, headers()),
+        body: JSON.stringify({ authForceMock: next }),
+      });
+      if (!r.ok){ setMsg("切换失败 " + r.status, true); return; }
+      await load();   // 重新拉状态
+    } catch(e){ setMsg("网络错误：" + e.message, true); }
+  });
+
+  document.getElementById("refresh").addEventListener("click", load);
+  tokEl.addEventListener("keydown", function(e){ if(e.key==="Enter") load(); });
+  load();
+})();
+</script>
+</body>
+</html>

@@ -28,15 +28,19 @@ GEN_DAILY_QUOTA                       = 20
   它会自动注入 `KV_REST_API_URL` / `KV_REST_API_TOKEN`（代码已兼容这套命名）。
 - **B 手动**：把你 `.env.local` 里那组 `KV_REST_API_URL` / `KV_REST_API_TOKEN` 原样填进环境变量。
 
-## 4. Supabase 后台（加线上域名，不是改）
-部署拿到域名后（如 `https://vibe-page.vercel.app`）：
-- Authentication → URL Configuration → **Redirect URLs** 追加：
-  ```
-  https://<你的vercel域名>/auth/callback
-  ```
-  （本地那条 `http://localhost:3000/auth/callback` 保留，两条共存）
-- **Site URL** 改成 `https://<你的vercel域名>`
-> 代码用 `location.origin` 自动适配域名，**不需改任何代码**。
+## 4. Supabase 后台（OTP 验证码登录，关键配置）
+登录走**纯 OTP 验证码**（邮件发 6 位数字码，用户在当前浏览器手输 → 天然跨浏览器）。
+不再用魔法链接/回调，**不需要配 Redirect URLs**。需配三处：
+
+- **① 邮件模板发码而非链接**（最关键）：Authentication → Email Templates → **Magic Link** 模板，
+  正文改用 `{{ .Token }}`（发 6 位验证码），而非 `{{ .ConfirmationURL }}`（发链接）。
+  例：`您的登录验证码是：<b>{{ .Token }}</b>，10 分钟内有效。`
+  > 不改这里仍会发链接，验证码流收不到码。
+- **② OTP 过期时长**：Authentication → Providers → Email → **Email OTP Expiration** 设 600~3600s。
+- **③ 自定义 SMTP（额度）**：Authentication → SMTP Settings 启用 **Resend**（内置邮件仅 2 封/小时，不可用于生产）。
+  启用后初始 30 封/小时，按需在 **Rate Limits** 页上调。
+- **Site URL** 改成 `https://<你的vercel域名>`（仅用于邮件文案/品牌，不影响 OTP 流）。
+> 登录全程不依赖回调域名，**不需改任何代码**。
 
 ## 5. 数据库表
 若还没跑过：Supabase → SQL Editor 执行 `supabase/schema.sql`（建 generations / feedback + RLS）。
@@ -44,7 +48,8 @@ GEN_DAILY_QUOTA                       = 20
 ## 6. 部署 & 验证
 Deploy 后访问线上域名：
 - `GET /api/config` → 应返回 `"authMode":"supabase"`
-- 打开首页 → 输邮箱 → 收信点链接 → 进 `/app.html` 看真实生成
+- 打开首页 → 输邮箱 → 收信抄 6 位验证码 → 输入 → 进 `/app.html` 看真实生成
+  （跨浏览器验证：在 A 浏览器发码，把码抄到 B 浏览器输入，应照样登录成功）
 - 第二次访问同路径应秒回（Upstash 缓存命中）
 
 ---
