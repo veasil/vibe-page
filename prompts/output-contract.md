@@ -13,7 +13,11 @@
 4. **重复结构一律用宏占位符 `[[...]]`**（见第 2 节），不要手写它们的 HTML。
 5. **不输出任何解释或 markdown 代码块**，直接吐 HTML 片段。
 6. 每页 **≥ 2 个广告位**（门户页 6–8 个），用 `[[AD:...]]`。
-7. 每页 **4–6 个内链**，用 `[[INNER:slug|文字]]` 或 `<a class="inner-link" data-slug="slug">文字</a>`。
+7. **页面里每一个可点的「内容链接」都必须是生成型内链**——只能用 `[[INNER:slug|文字]]` 或 `<a class="inner-link" data-slug="slug">文字</a>`。**严禁死链**：不准出现 `href="#"`、`href=""`、`href="javascript:;"`，也不准写不带 `data-slug` 的裸 `<a>`（点死链会让页面白屏）。
+   - **slug 默认写「相对路径段」**（小写英文/拼音 + 短横线，无空格无中文标点）；点击后会作为**当前页面的子路径**生成新页面，由此把词条组织成一棵树。
+     例：帖子列表里某帖标题 → `tie-shuxue-nanti`；帖内第 N 楼 → `lou-12`；版块/子分类 → `ban-youxi`；「阅读全文 / 更多 / 下一页」→ 指向更深的相对子路径。
+   - **要引用「已存档词条」**（任务区会给清单）时，用**绝对路径**内链（slug 以 `/` 开头）直达，不重复生成。例：`[[INNER:/news/shenzhou-10|神舟十号发射]]`。
+   - 列表、楼层、相关推荐、导航里的**每一条标题都应是这样的内链**；至少 4–6 个，多多益善。
 
 ---
 
@@ -23,7 +27,7 @@
   - 链接前小图标：`<span class="fav" style="background:#xx">首</span>`，热门加 `class="hot"`
 **右栏组件**：`.widget`>`.widget-hd` + `.rank`(热榜)/`.weather`(天气)/`.mini`(查询宫格)
 **内联角标**：`<i class="tag-hot">热</i>` / `tag-new` / `tag-top`
-**页面类型布局**（加在内容最外层）：
+**页面类型布局**（加在内容最外层 div）：
   - `news`：`<div class="layout-news"> ... .article(h1/.meta/p)`
   - `forum`：`.layout-forum .post > .floor(.who/.body)`
   - `game`：`.layout-game .stage`（小游戏画布放这里）

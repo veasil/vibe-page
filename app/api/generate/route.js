@@ -2,8 +2,9 @@
 // 鉴权：配了 Supabase 走 Cookie 会话（@supabase/ssr）；否则回退 mock Bearer。
 import { cookies } from "next/headers";
 import { createClient, supabaseConfigured } from "@/utils/supabase/server";
-import { requireUser, AuthError } from "../../../lib/auth.mjs";
-import { generatePage, QuotaError } from "../../../lib/generate.mjs";
+import { requireMockUser, AuthError } from "../../../lib/auth.mjs";
+import { authForceMock } from "../../../lib/flags.mjs";
+import { generatePage, QuotaError, TruncationError, BlockedError } from "../../../lib/generate.mjs";
 import { sanitizeSlug } from "../../../lib/prompt.mjs";
 
 export const runtime = "nodejs";
@@ -13,14 +14,15 @@ export const maxDuration = 60;
 
 export async function POST(req) {
   // 1) 鉴权（未登录 401，不花一分钱）
+  // admin 强制 mock 时即便配了 Supabase 也走 mock Bearer，与 /api/config 报的 authMode 一致
   let user, supabase = null;
-  if (supabaseConfigured()) {
+  if (supabaseConfigured() && !authForceMock()) {
     supabase = createClient(await cookies());
     const { data, error } = await supabase.auth.getUser();
     if (error || !data?.user) return json({ error: "未登录" }, 401);
     user = { id: data.user.id, email: data.user.email };
   } else {
-    try { user = await requireUser(req.headers.get("authorization")); }
+    try { user = requireMockUser(req.headers.get("authorization")); }
     catch (e) { if (e instanceof AuthError) return json({ error: e.message }, 401); throw e; }
   }
 
@@ -58,6 +60,8 @@ export async function POST(req) {
     });
   } catch (e) {
     if (e instanceof QuotaError) return json({ error: e.message, quota: e.quota }, 429);
+    if (e instanceof BlockedError) return json({ error: e.message, blocked: true }, 451);
+    if (e instanceof TruncationError) return json({ error: e.message, retry: true }, 502);
     console.error("[generate]", e);
     return json({ error: "生成失败" }, 500);
   }

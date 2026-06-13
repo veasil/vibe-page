@@ -17,6 +17,7 @@
     var W = ["星期日","星期一","星期二","星期三","星期四","星期五","星期六"];
     function tick(){
       var d = new Date();
+      d.setFullYear(d.getFullYear() - 13);   // 时代锚点：今天 − 13 年（星期按那一天算）
       el.innerHTML = d.getFullYear() + "年" + pad(d.getMonth()+1) + "月" + pad(d.getDate()) +
         "日 &nbsp;" + W[d.getDay()] + " &nbsp;<b>" +
         pad(d.getHours()) + ":" + pad(d.getMinutes()) + ":" + pad(d.getSeconds()) + "</b>";
@@ -31,7 +32,13 @@
     function go(){
       var kw = (input && input.value || "").trim();
       if (!kw){ alert("请输入要搜索的关键词～"); return; }
-      window.open("https://www.baidu.com/s?wd=" + encodeURIComponent(kw), "_blank");
+      if (inIframe){
+        // 站内幻觉搜索：交给父壳生成搜索结果页（type:search，不缓存）。
+        // 绝对路径（前导 /）→ 搜索页始终是顶层，不挂到当前页子路径下
+        parent.postMessage({ type: "vibe:navigate", slug: "/search/" + kw }, "*");
+      } else {
+        window.open("https://www.baidu.com/s?wd=" + encodeURIComponent(kw), "_blank");
+      }
     }
     if (btn) btn.addEventListener("click", go);
     if (input) input.addEventListener("keydown", function(e){ if (e.key === "Enter") go(); });
@@ -46,19 +53,38 @@
     });
   }
 
-  /* ---------- 内链导航：iframe 内点击 → 通知父窗口换 src ---------- */
+  /* ---------- 内链导航：iframe 内点击 → 通知父窗口换 src ----------
+     防御核心：iframe 内拦截【所有 <a>】，绝不让沙箱页自我导航（href="" / "#" 自我导航 = 白屏元凶）。
+     · 生成型内链（.inner-link 或 data-slug）→ 交父窗口生成对应词条页
+     · 死链/锚点/javascript: → 吞掉，什么都不做
+     · 外部 http(s) → 新标签打开
+     · 其余相对 href（模型偶尔没用 inner-link，写了 href="数学吧"）→ 当内链生成
+     非 iframe 上下文（如 login.html）只处理显式内链，放行真实链接。            */
   function startInnerLinks(){
+    function go(slug){
+      slug = String(slug || "").trim();
+      if (!slug) return;
+      if (inIframe) parent.postMessage({ type: "vibe:navigate", slug: slug }, "*");
+      else location.href = "/app.html#/" + slug.replace(/^\/+/, "");
+    }
     document.addEventListener("click", function(e){
-      var a = e.target.closest && e.target.closest(".inner-link[data-slug]");
+      var a = e.target.closest && e.target.closest("a");
       if (!a) return;
-      e.preventDefault();
       var slug = a.getAttribute("data-slug");
-      if (inIframe){
-        // 不直接跳转，交给可信父窗口校验后导航
-        parent.postMessage({ type: "vibe:navigate", slug: slug }, "*");
-      } else {
-        location.href = "/app/" + encodeURIComponent(slug);
+      var href = a.getAttribute("href") || "";
+
+      // 1) 显式生成型内链（任何上下文都接管）
+      if (a.classList.contains("inner-link") || slug){
+        e.preventDefault(); go(slug || href); return;
       }
+      // 以下防御只在沙箱 iframe 内生效；非 iframe 放行真实链接（如 login 的「返回首页」）
+      if (!inIframe) return;
+      // 2) 死链 / 锚点 / javascript: → 阻止自我导航
+      if (!href || href === "#" || /^javascript:/i.test(href)){ e.preventDefault(); return; }
+      // 3) 外部链接 → 新标签（sandbox 不允许顶层导航）
+      if (/^https?:/i.test(href)){ e.preventDefault(); try { window.open(href, "_blank"); } catch (_) {} return; }
+      // 4) 相对 href → 当生成型内链
+      e.preventDefault(); go(href);
     });
   }
 
@@ -108,8 +134,16 @@
     });
   }
 
+  /* ---------- 时代日期占位：[data-era-date] 填「今天 − 13 年」 ---------- */
+  function paintEraDate(){
+    var d = new Date();
+    d.setFullYear(d.getFullYear() - 13);
+    var txt = d.getFullYear() + " 年 " + (d.getMonth()+1) + " 月 " + d.getDate() + " 日";
+    document.querySelectorAll("[data-era-date]").forEach(function(el){ el.textContent = txt; });
+  }
+
   function boot(){
-    startClock(); startSearch(); startSetHome();
+    startClock(); startSearch(); startSetHome(); paintEraDate();
     startInnerLinks(); startPopupQueue();
     paintFav(); startLoadingChoreo();
   }
