@@ -157,6 +157,7 @@
       });
       if (res.status === 401){ gotoLogin(); return; }
       if (res.status === 429){ showErr("今日配额已用尽", "新词条生成已达上限，明天再来，或浏览已封存的词条。"); return; }
+      if (res.status === 451){ showErr("内容不可用", "该内容因涉及违规被拦截，无法生成或封存。"); return; }
       if (!res.ok){ showErr("生成失败", "服务暂时不可用（" + res.status + "）。若本机开了代理（如 Clash），请让它绕过 localhost/127.0.0.1。"); return; }
       var html = await res.text();
       // 防御：200 但 body 为空/过短（被代理或网络截断的典型表现）→ 报错而非塞空白进 iframe 造成神秘白屏

@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { createClient, supabaseConfigured } from "@/utils/supabase/server";
 import { requireMockUser, AuthError } from "../../../lib/auth.mjs";
 import { authForceMock } from "../../../lib/flags.mjs";
-import { generatePage, QuotaError, TruncationError } from "../../../lib/generate.mjs";
+import { generatePage, QuotaError, TruncationError, BlockedError } from "../../../lib/generate.mjs";
 import { sanitizeSlug } from "../../../lib/prompt.mjs";
 
 export const runtime = "nodejs";
@@ -60,6 +60,7 @@ export async function POST(req) {
     });
   } catch (e) {
     if (e instanceof QuotaError) return json({ error: e.message, quota: e.quota }, 429);
+    if (e instanceof BlockedError) return json({ error: e.message, blocked: true }, 451);
     if (e instanceof TruncationError) return json({ error: e.message, retry: true }, 502);
     console.error("[generate]", e);
     return json({ error: "生成失败" }, 500);
