@@ -118,6 +118,32 @@
       <tbody><tr><td colspan="3" class="empty">加载中…</td></tr></tbody></table></div>
   </div>
 
+  <!-- 邀请码 / 兑换码 -->
+  <div class="panel">
+    <div class="hd"><b style="background:#5a9c2e"></b>邀请码 / 兑换码</div>
+    <div class="bd">
+      <div class="muted" style="font-size:11px;margin-bottom:10px">
+        <strong>邀请码</strong>(INV-)：核销后该账号升级为<strong>无限额度</strong>；
+        <strong>兑换码</strong>(RDM-)：核销后给账号 <strong>+N 次</strong>额度。均<strong>单次失效</strong>，可批量生成。
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+        <select id="code-type" style="width:auto">
+          <option value="redeem">兑换码（+次数）</option>
+          <option value="invite">邀请码（无限额度）</option>
+        </select>
+        <input id="code-bonus" type="number" min="1" value="20" style="width:90px" title="兑换次数（仅兑换码）">
+        <input id="code-count" type="number" min="1" max="200" value="5" style="width:80px" title="生成数量">
+        <input id="code-note" placeholder="备注(可选)" style="width:160px">
+        <button class="btn" id="code-gen">生成</button>
+        <span id="code-msg" class="muted"></span>
+      </div>
+      <textarea id="code-out" rows="3" readonly placeholder="生成的码会显示在这里，便于复制"
+        style="font-family:monospace;font-size:12px;display:none;margin-bottom:10px"></textarea>
+      <table id="code-tb"><thead><tr><th>码</th><th>类型</th><th>面值</th><th>状态</th><th>备注</th><th>操作</th></tr></thead>
+        <tbody><tr><td colspan="6" class="empty">加载中…</td></tr></tbody></table>
+    </div>
+  </div>
+
   <!-- 已封存词条 -->
   <div class="panel">
     <div class="hd"><b></b>已封存词条 <span class="muted" id="e-count"></span>
@@ -219,6 +245,24 @@
         '</td><td><b>' + q.used + '</b> / ' + d.env.quotaDaily + '</td></tr>';
     }).join("");
 
+    // 邀请码 / 兑换码
+    var ctb = document.querySelector("#code-tb tbody");
+    var codes = d.codes || [];
+    if (!codes.length){ ctb.innerHTML = '<tr><td colspan="6" class="empty">暂无，去上面生成</td></tr>'; }
+    else ctb.innerHTML = codes.map(function(c){
+      var st = c.status==="active" ? '<span class="pill real">未使用</span>'
+             : c.status==="used"   ? '<span class="pill gray">已用</span>'
+             :                       '<span class="pill on">已作废</span>';
+      var typ = c.type==="invite" ? "邀请码" : "兑换码";
+      var val = c.type==="invite" ? "无限" : ("+" + c.bonus);
+      var act = c.status==="active"
+        ? '<button class="del" data-revoke="' + esc(c.code) + '">作废</button>'
+        : '<button class="del" data-delcode="' + esc(c.code) + '">删除</button>';
+      return '<tr><td style="font-family:monospace">' + esc(c.code) + '</td><td>' + typ +
+        '</td><td>' + val + '</td><td>' + st + '</td><td class="muted">' + esc(c.note||"") +
+        '</td><td>' + act + '</td></tr>';
+    }).join("");
+
     // 首页缓存清除按钮
     document.getElementById("clearHome").style.display = d.env.homeCached ? "" : "none";
 
@@ -269,6 +313,50 @@
   });
   document.getElementById("clearHome").addEventListener("click", function(){
     del({ clearHome: true }, "清除首页缓存？\n下次访问首页会按当前规则重新生成。");
+  });
+
+  // —— 邀请码 / 兑换码 ——
+  // 邀请码无面值，切到 invite 时禁用兑换次数输入
+  document.getElementById("code-type").addEventListener("change", function(){
+    document.getElementById("code-bonus").disabled = (this.value === "invite");
+  });
+  document.getElementById("code-gen").addEventListener("click", async function(){
+    var type  = document.getElementById("code-type").value;
+    var bonus = +document.getElementById("code-bonus").value || 20;
+    var count = +document.getElementById("code-count").value || 1;
+    var note  = document.getElementById("code-note").value.trim();
+    var m = document.getElementById("code-msg");
+    m.textContent = "生成中…"; m.style.color = "#888";
+    try {
+      var r = await fetch("/api/admin", { method:"POST",
+        headers: Object.assign({ "Content-Type":"application/json" }, headers()),
+        body: JSON.stringify({ genCodes: { type:type, count:count, bonus:bonus, note:note } }) });
+      var d = await r.json();
+      if (!r.ok || !d.ok){ m.textContent = (d && d.error) || "生成失败"; m.style.color = "#e60012"; return; }
+      var out = document.getElementById("code-out");
+      out.style.display = "block"; out.value = (d.codes||[]).join("\n");
+      m.textContent = "已生成 " + (d.codes||[]).length + " 个 ✓"; m.style.color = "#5a9c2e";
+      await load();
+    } catch(e){ m.textContent = "网络错误：" + e.message; m.style.color = "#e60012"; }
+  });
+  async function codeAction(method, body, confirmMsg){
+    if (confirmMsg && !confirm(confirmMsg)) return;
+    setMsg("处理中…");
+    try {
+      var r = await fetch("/api/admin", { method:method,
+        headers: Object.assign({ "Content-Type":"application/json" }, headers()),
+        body: JSON.stringify(body) });
+      if (!r.ok){ setMsg("操作失败 " + r.status, true); return; }
+      await load();
+    } catch(e){ setMsg("网络错误：" + e.message, true); }
+  }
+  document.getElementById("code-tb").addEventListener("click", function(e){
+    var rev = e.target.closest && e.target.closest("[data-revoke]");
+    var dc  = e.target.closest && e.target.closest("[data-delcode]");
+    if (rev){ var c = rev.getAttribute("data-revoke");
+      codeAction("POST", { revokeCode: c }, "作废「" + c + "」？\n作废后该码无法再被核销。"); }
+    else if (dc){ var c2 = dc.getAttribute("data-delcode");
+      codeAction("DELETE", { code: c2 }, "删除「" + c2 + "」的记录？"); }
   });
 
   function esc(s){ return String(s).replace(/[&<>"]/g, function(c){

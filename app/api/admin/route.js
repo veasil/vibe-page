@@ -6,6 +6,7 @@ import * as kv from "../../../lib/kv.mjs";
 import { pickProvider } from "../../../lib/llm.mjs";
 import { setAuthForceMock, flagsState } from "../../../lib/flags.mjs";
 import { getEgg, setEgg, currentPeriod } from "../../../lib/egg.mjs";
+import { generateCodes, listCodes, revokeCode, deleteCode } from "../../../lib/codes.mjs";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -34,13 +35,14 @@ export async function GET(req) {
   const authMode = supabaseUrl && supabaseKey && !flags.effective ? "supabase" : "mock";
 
   const period = currentPeriod();
-  const [slugs, gen, quota, home, eggCfg, eggCount] = await Promise.all([
+  const [slugs, gen, quota, home, eggCfg, eggCount, codes] = await Promise.all([
     kv.archivedSlugs(),
     kv.readGenStats(),
     kv.quotaUsage(),
     kv.get("home"),
     getEgg(),
     kv.get(`egg:found:${period}:count`),
+    listCodes(),
   ]);
 
   return json({
@@ -58,6 +60,7 @@ export async function GET(req) {
     quota,
     entries: { count: slugs.length, list: slugs.slice(0, 200) },
     egg: { period, foundCount: +eggCount || 0, current: eggCfg },
+    codes,
   });
 }
 
@@ -73,6 +76,18 @@ export async function POST(req) {
   if (body.egg && typeof body.egg === "object") {
     const saved = await setEgg(body.egg);
     return json({ ok: true, egg: saved });
+  }
+  // 批量生成邀请码 / 兑换码
+  if (body.genCodes && typeof body.genCodes === "object") {
+    try {
+      const r = await generateCodes(body.genCodes);
+      return json(r);
+    } catch (e) { return json({ error: e.message || "生成失败" }, 400); }
+  }
+  // 作废一个未使用的码
+  if (typeof body.revokeCode === "string" && body.revokeCode.trim()) {
+    const r = await revokeCode(body.revokeCode.trim());
+    return json(r, r.ok ? 200 : 404);
   }
   return json({ error: "无可设置字段" }, 400);
 }
@@ -91,5 +106,10 @@ export async function DELETE(req) {
     const removed = await kv.delPage(body.slug.trim());
     return json({ ok: true, deleted: body.slug.trim(), removed: !!removed });
   }
-  return json({ error: "需要 slug 或 clearHome:true" }, 400);
+  // 删除一个码记录（含核销计数器）
+  if (typeof body.code === "string" && body.code.trim()) {
+    const r = await deleteCode(body.code.trim());
+    return json(r);
+  }
+  return json({ error: "需要 slug / clearHome:true / code" }, 400);
 }
