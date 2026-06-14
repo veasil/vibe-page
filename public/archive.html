@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1024">
+<title>收录词条 — 协商真实 · 幻觉导航网</title>
+<link rel="stylesheet" href="era.css">
+<style>
+.doc{width:1000px;margin:16px auto 0;background:#fff;border:1px solid var(--c-border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.doc-hd{border-bottom:1px solid var(--c-border);background:linear-gradient(180deg,#eaf4fe,#fff);padding:14px 28px}
+.doc-hd .crumb{font-size:12px;color:#999;margin-bottom:5px}.doc-hd .crumb a{color:#999}
+.doc-hd h1{font-size:22px;color:#222}
+.doc-hd h1 .cnt{color:var(--c-hot);font:bold 20px Tahoma;margin:0 4px}
+.doc-bd{padding:14px 28px 26px}
+.tip{font-size:12px;color:#999;margin-bottom:12px;line-height:1.8}
+.arc-list{display:flex;flex-wrap:wrap}
+.arc-list a{width:25%;line-height:26px;font-size:13px;color:#555;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:10px}
+.arc-list a:hover{color:var(--c-hot)}
+.arc-list a .dot{display:inline-block;width:6px;height:6px;background:var(--c-main);border-radius:1px;margin-right:6px;vertical-align:1px}
+.state{padding:30px 0;text-align:center;color:#999;font-size:13px}
+.state.empty b{color:#666;display:block;margin-bottom:6px;font-size:14px}
+.state a{color:var(--c-main)}
+</style>
+</head>
+<body data-theme="baidu">
+
+<div class="topbar"><div class="wrap">
+  <div><a href="landing.html">← 返回首页</a><span class="tz" data-clock></span></div>
+  <div><a href="about.html">关于</a>|<a href="archive.html">收录词条</a>|<a href="feedback.html">意见反馈</a>|<a href="help.html">使用帮助</a></div>
+</div></div>
+
+<div class="doc">
+  <div class="doc-hd">
+    <div class="crumb"><a href="landing.html">首页</a> &gt; 收录词条</div>
+    <h1>已收录 <span class="cnt" id="cnt">…</span> 个词条</h1>
+  </div>
+  <div class="doc-bd">
+    <div class="tip">这些是已经被永久封存的「真实」—— 第一次有人访问它们时，AI 当场生成、此后不可更改。点任意一条即可重访。</div>
+    <div id="list" class="arc-list"></div>
+    <div id="state" class="state">正在读取已封存词条…</div>
+  </div>
+</div>
+
+<div class="footer" style="margin-top:18px"><div class="wrap">
+  <div class="nav"><a href="about.html">关于</a>|<a href="archive.html">收录词条</a>|<a href="feedback.html">意见反馈</a>|<a href="help.html">使用帮助</a></div>
+  <div class="copy">© 2010-2016 hao123.com · 一个关于「真实如何被协商」的实验</div>
+</div></div>
+
+<script src="runtime.js"></script>
+<script>
+(function(){
+  var listEl = document.getElementById("list");
+  var stateEl = document.getElementById("state");
+  var cntEl = document.getElementById("cnt");
+  fetch("/api/archive").then(function(r){ return r.json(); }).then(function(d){
+    var slugs = (d && d.slugs) || [];
+    cntEl.textContent = (typeof d.count === "number" ? d.count : slugs.length).toLocaleString();
+    if (!slugs.length){
+      stateEl.className = "state empty";
+      stateEl.innerHTML = "<b>还没有任何词条被封存</b>去 <a href='landing.html'>首页</a> 输入一个网址，成为第一个为它定义「真实」的人。";
+      return;
+    }
+    var frag = document.createDocumentFragment();
+    slugs.forEach(function(s){
+      var label = s; try { label = decodeURIComponent(s); } catch(_){}
+      var a = document.createElement("a");
+      a.href = "app.html#/" + s.replace(/^\/+/, "");
+      a.title = label;
+      a.innerHTML = "<span class='dot'></span>";
+      a.appendChild(document.createTextNode(label));
+      frag.appendChild(a);
+    });
+    listEl.appendChild(frag);
+    stateEl.style.display = "none";
+    if (d.count > slugs.length){
+      stateEl.style.display = "";
+      stateEl.textContent = "（仅展示前 " + slugs.length + " 条）";
+    }
+  }).catch(function(){
+    stateEl.className = "state empty";
+    stateEl.textContent = "词条列表加载失败，请稍后重试。";
+  });
+})();
+</script>
+</body>
+</html>

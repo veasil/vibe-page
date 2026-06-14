@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1024">
+<title>使用帮助 — 协商真实 · 幻觉导航网</title>
+<link rel="stylesheet" href="era.css">
+<style>
+.doc{width:1000px;margin:16px auto 0;background:#fff;border:1px solid var(--c-border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.doc-hd{border-bottom:1px solid var(--c-border);background:linear-gradient(180deg,#eaf4fe,#fff);padding:14px 28px}
+.doc-hd .crumb{font-size:12px;color:#999;margin-bottom:5px}.doc-hd .crumb a{color:#999}
+.doc-hd h1{font-size:22px;color:#222}
+.doc-bd{padding:18px 28px 26px;font-size:14px;line-height:1.95;color:#444}
+.doc-bd h2{font-size:16px;color:#222;margin:22px 0 8px;padding-left:10px;border-left:3px solid var(--c-main)}
+.doc-bd p{margin:8px 0}
+.doc-bd ul{margin:6px 0}
+.doc-bd li{list-style:none;padding:3px 0 3px 18px;position:relative}
+.doc-bd li::before{content:"■";color:var(--c-main);font-size:9px;position:absolute;left:0;top:8px}
+.doc-bd a{color:var(--c-main)}
+.doc-bd code{background:#f2f5f8;border:1px solid #e0e6ee;border-radius:3px;padding:1px 6px;font-family:Consolas,"Courier New",monospace;color:#c0392b;font-size:13px}
+.faq{border-top:1px dashed #eee;padding:10px 0}
+.faq b{color:#222}
+</style>
+</head>
+<body data-theme="baidu">
+
+<div class="topbar"><div class="wrap">
+  <div><a href="landing.html">← 返回首页</a><span class="tz" data-clock></span></div>
+  <div><a href="about.html">关于</a>|<a href="archive.html">收录词条</a>|<a href="feedback.html">意见反馈</a>|<a href="help.html">使用帮助</a></div>
+</div></div>
+
+<div class="doc">
+  <div class="doc-hd">
+    <div class="crumb"><a href="landing.html">首页</a> &gt; 使用帮助</div>
+    <h1>使用帮助</h1>
+  </div>
+  <div class="doc-bd">
+
+    <h2>1. 怎么开始</h2>
+    <ul>
+      <li>在首页的地址栏里输入任意一个网址路径，回车或点「进入」。</li>
+      <li>比如 <code>news/神舟十号发射</code>、<code>bbs/余额宝/讨论</code>、<code>game/穿越火线</code>、<code>space/user/zhang3</code>。</li>
+      <li>也可以直接点首页「热门入口」里的词条。</li>
+    </ul>
+
+    <h2>2. 路径决定页面长什么样</h2>
+    <p>AI 会根据路径语义自动判断页面类型并套用对应的年代风格：</p>
+    <ul>
+      <li><code>news/…</code> 或人物、事件词条 → 门户新闻页</li>
+      <li><code>bbs/…</code>、<code>forum/…</code>、<code>xx吧</code> → 论坛 / 贴吧</li>
+      <li><code>space/…</code>、<code>blog/…</code> → 个人空间 / 博客</li>
+      <li><code>game/…</code> → 游戏站，具体游戏页还能真的玩</li>
+      <li>其余 → 由 AI 自行推断</li>
+    </ul>
+
+    <h2>3. 关于登录</h2>
+    <ul>
+      <li><b>浏览</b>已封存的词条：无需登录，任何人都能看。</li>
+      <li><b>触发生成</b>一个全新的词条：需要登录（邮箱验证码），每日有配额，防止滥用烧钱。</li>
+      <li>登录后会话由浏览器保存，<b>下次回来无需重新登录</b>（除非你主动清除浏览器数据）。</li>
+    </ul>
+
+    <h2>4. 「第一次」很重要</h2>
+    <p>某个路径第一次被生成后就被<b>永久封存</b>、不可更改。你看到的，就成了它唯一的「真实」。想看看大家已经定义了哪些「真实」，去 <a href="archive.html">收录词条</a>。</p>
+
+    <h2>常见问题</h2>
+    <div class="faq"><p><b>Q：页面一直在转圈 / 白屏？</b><br>A：若本机开了代理（如 Clash），请让它绕过 <code>localhost</code> / <code>127.0.0.1</code>，或暂时关闭代理后重试。</p></div>
+    <div class="faq"><p><b>Q：提示「今日配额已用尽」？</b><br>A：新词条生成有每日上限，明天再来，或先浏览已封存的词条。</p></div>
+    <div class="faq"><p><b>Q：内容有穿帮 / 出现了 13 年后才有的东西？</b><br>A：这是幻觉的副作用，欢迎到 <a href="feedback.html">意见反馈</a> 告诉我们。</p></div>
+
+  </div>
+</div>
+
+<div class="footer" style="margin-top:18px"><div class="wrap">
+  <div class="nav"><a href="about.html">关于</a>|<a href="archive.html">收录词条</a>|<a href="feedback.html">意见反馈</a>|<a href="help.html">使用帮助</a></div>
+  <div class="copy">© 2010-2016 hao123.com · 一个关于「真实如何被协商」的实验</div>
+</div></div>
+
+<script src="runtime.js"></script>
+</body>
+</html>

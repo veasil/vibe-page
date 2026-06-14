@@ -10,6 +10,10 @@
 .hero{background:linear-gradient(180deg,#eaf4fe,#f5f6f7);border-bottom:1px solid var(--c-border);padding:34px 0 28px;text-align:center}
 .hero .biglogo{font:900 italic 72px/1 Arial;letter-spacing:-3px}
 .hero .biglogo .ha{color:var(--c-main)} .hero .biglogo .num{color:var(--c-hot)}
+/* 被划掉的 o —— 暗示这是个「冒牌的、幻觉的」hao123 */
+.biglogo .strike{color:#b8c2cc;position:relative}
+.biglogo .strike::after{content:"";position:absolute;left:-2px;right:-2px;top:52%;height:5px;
+  background:var(--c-hot);transform:rotate(-8deg);border-radius:2px}
 .hero .slogan{margin:14px 0 4px;font-size:18px;color:#333}
 .hero .slogan b{color:var(--c-main)}
 .hero .sub{color:#888;font-size:13px}
@@ -24,6 +28,10 @@
 .chips a:hover{border-color:var(--c-main);color:var(--c-main);text-decoration:none}
 .counter{display:inline-block;margin-top:16px;color:#999;font-size:13px}
 .counter b{color:var(--c-hot);font:bold 20px Tahoma;margin:0 4px}
+.egg-clue{display:none;margin:16px auto 0;max-width:680px;background:#fff8e6;border:1px solid #f0d488;
+  border-radius:16px;padding:7px 16px;font-size:13px;color:#8a6d00;line-height:1.6}
+.egg-clue .tag{background:#d9a441;color:#fff;border-radius:10px;padding:1px 9px;font-size:11px;margin-right:8px;white-space:nowrap}
+.egg-clue .cnt{color:#b59030;margin-left:8px;font-size:12px}
 .cta a{display:inline-block;margin:0 6px;padding:7px 22px;border-radius:4px;font-size:14px;font-weight:bold}
 .cta .login{background:linear-gradient(#3aa0f5,#2b8eea);color:#fff}
 .cta .reg{background:#fff;border:1px solid var(--c-main);color:var(--c-main)}
@@ -45,14 +53,14 @@
     <span class="tz" data-clock></span>
   </div>
   <div>
-    <a href="login.html">登录</a>|<a href="login.html?tab=register">注册</a>|<a href="javascript:;">客户端</a>
+    <a href="login.html">登录</a>|<a href="login.html?tab=register">注册</a>|<a href="about.html#contact">客户端</a>
   </div>
 </div></div>
 
 <div class="hero">
-  <div class="biglogo"><span class="ha">hao</span><span class="num">123</span></div>
-  <div class="slogan">输入任意网址，AI 当场为你生成它的「<b>真实</b>」</div>
-  <div class="sub">协商真实 · 幻觉导航网 —— 一个永远停在 <b data-era-date>13 年前</b> 的中文互联网</div>
+  <div class="biglogo"><span class="ha">ha</span><span class="strike">o</span><span class="ha">i</span><span class="num">123</span></div>
+  <div class="slogan">随意探索 <b>13 年前</b> 的导航页 —— 但一切都建立在<b>幻觉</b>之上</div>
+  <div class="sub">幻觉导航网 —— 一个永远停在 <b>13 年前</b> 的中文互联网</div>
 
   <form class="addrbar" onsubmit="enter(event)">
     <span class="scheme">http://</span>
@@ -64,12 +72,18 @@
   <div class="chips">
     热门入口：
     <a href="javascript:;" data-go="news/神舟十号发射">神舟十号发射</a>
-    <a href="javascript:;" data-go="bbs/余额宝/讨论">余额宝吧</a>
+    <a href="javascript:;" data-go="tieba/李毅吧">李毅吧</a>
     <a href="javascript:;" data-go="game/穿越火线">穿越火线</a>
     <a href="javascript:;" data-go="space/user/zhang3">张三的空间</a>
     <a href="javascript:;" data-go="news/小米2S发布">小米2S发布</a>
   </div>
-  <div class="counter">已封存 <b id="cnt">12,847</b> 个词条的「真实」，并仍在生长</div>
+  <div class="counter">已封存 <b id="cnt">…</b> 个「13 年前？？？」的词条，并仍在生长</div>
+
+  <div class="egg-clue" id="eggClue">
+    <span class="tag">本期彩蛋</span>
+    <span id="eggClueText"></span>
+    <span class="cnt" id="eggFound"></span>
+  </div>
 </div>
 
 <div class="wrap" style="padding:18px 0 30px">
@@ -85,13 +99,13 @@
   </div>
 
   <div style="text-align:center;margin-top:8px" class="cta">
-    <a class="login" href="login.html">登录开始探索</a>
+    <a class="login" href="/app.html">登录开始探索</a>
     <a class="reg" href="login.html?tab=register">免费注册</a>
   </div>
 </div>
 
 <div class="footer"><div class="wrap">
-  <div class="nav"><a href="javascript:;">关于</a>|<a href="javascript:;">收录词条</a>|<a href="javascript:;">意见反馈</a>|<a href="javascript:;">使用帮助</a></div>
+  <div class="nav"><a href="about.html">关于</a>|<a href="archive.html">收录词条</a>|<a href="feedback.html">意见反馈</a>|<a href="help.html">使用帮助</a></div>
   <div class="copy">京ICP证030173号 · 京公网安备 11000002000001号<br>© 2010-2016 hao123.com · 一个关于「真实如何被协商」的实验</div>
 </div></div>
 
@@ -101,19 +115,30 @@
   function goTo(slug){
     var s = (slug||"").trim().replace(/^https?:\/\//,"").replace(/^\/+/,"");
     if(!s){ alert("随便输入一个网址路径吧，比如 news/神舟十号"); return; }
-    // 已登录直接进 app；未登录先去登录页（带 next 回跳）
-    var target = "/app.html#/" + s;
-    if (localStorage.getItem("vibe_token")) location.href = target;
-    else location.href = "login.html?next=" + encodeURIComponent(target);
+    // 直接进 app —— 登录态由 app.html 统一判定（Supabase 走 Cookie 会话，mock 走 localStorage）。
+    // 已登录则保持登录、直达词条；未登录时 app.html 会自动跳登录页并带 next 回跳。
+    // （此前这里只认 mock 的 localStorage.vibe_token，Supabase 登录用户每次都被误判未登录、被迫重新登录）
+    location.href = "/app.html#/" + s;
   }
   function enter(e){ e.preventDefault(); goTo(document.getElementById("addr").value); }
   document.addEventListener("click", function(e){
     var a = e.target.closest("[data-go]"); if(a) goTo(a.getAttribute("data-go"));
   });
-  // 词条计数器：从 /api/stats 拉真实 kv.keys('page:*').length，失败用基数兜底
-  (function(){ var el=document.getElementById("cnt"), n=12847;
-    fetch("/api/stats").then(r=>r.json()).then(d=>{ if(typeof d.count==="number"){ n+=d.count; el.textContent=n.toLocaleString(); } }).catch(()=>{});
-    setInterval(function(){ if(Math.random()<.3){ n++; el.textContent=n.toLocaleString(); } },2500); })();
+  // 词条计数器：真实数据 —— 直接显示 kv.keys('page:*').length，不再叠加虚构基数/自增
+  (function(){ var el=document.getElementById("cnt");
+    fetch("/api/stats").then(r=>r.json())
+      .then(d=>{ el.textContent = (typeof d.count==="number" ? d.count : 0).toLocaleString(); })
+      .catch(()=>{ el.textContent = "0"; }); })();
+  // 本期彩蛋线索（谜底只在服务端，这里只拿线索文案 + 发现人数）
+  (function(){
+    fetch("/api/egg/clue").then(r=>r.json()).then(function(d){
+      if(d && d.clue){
+        document.getElementById("eggClueText").textContent = d.clue;
+        document.getElementById("eggFound").textContent = "· 已有 " + (d.foundCount||0) + " 人找到";
+        document.getElementById("eggClue").style.display = "block";
+      }
+    }).catch(function(){});
+  })();
 </script>
 </body>
 </html>

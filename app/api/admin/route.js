@@ -5,6 +5,7 @@
 import * as kv from "../../../lib/kv.mjs";
 import { pickProvider } from "../../../lib/llm.mjs";
 import { setAuthForceMock, flagsState } from "../../../lib/flags.mjs";
+import { getEgg, setEgg, currentPeriod } from "../../../lib/egg.mjs";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -32,11 +33,14 @@ export async function GET(req) {
   const flags = flagsState();
   const authMode = supabaseUrl && supabaseKey && !flags.effective ? "supabase" : "mock";
 
-  const [slugs, gen, quota, home] = await Promise.all([
+  const period = currentPeriod();
+  const [slugs, gen, quota, home, eggCfg, eggCount] = await Promise.all([
     kv.archivedSlugs(),
     kv.readGenStats(),
     kv.quotaUsage(),
     kv.get("home"),
+    getEgg(),
+    kv.get(`egg:found:${period}:count`),
   ]);
 
   return json({
@@ -53,6 +57,7 @@ export async function GET(req) {
     gen,
     quota,
     entries: { count: slugs.length, list: slugs.slice(0, 200) },
+    egg: { period, foundCount: +eggCount || 0, current: eggCfg },
   });
 }
 
@@ -64,6 +69,10 @@ export async function POST(req) {
   if (typeof body.authForceMock === "boolean") {
     const effective = setAuthForceMock(body.authForceMock);
     return json({ ok: true, flags: flagsState(), note: effective === body.authForceMock ? "" : "生产环境已锁定，override 不生效（需 ALLOW_AUTH_OVERRIDE=1）" });
+  }
+  if (body.egg && typeof body.egg === "object") {
+    const saved = await setEgg(body.egg);
+    return json({ ok: true, egg: saved });
   }
   return json({ error: "无可设置字段" }, 400);
 }

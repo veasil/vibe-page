@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1024">
+<title>意见反馈 — 协商真实 · 幻觉导航网</title>
+<link rel="stylesheet" href="era.css">
+<style>
+.doc{width:1000px;margin:16px auto 0;background:#fff;border:1px solid var(--c-border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.doc-hd{border-bottom:1px solid var(--c-border);background:linear-gradient(180deg,#eaf4fe,#fff);padding:14px 28px}
+.doc-hd .crumb{font-size:12px;color:#999;margin-bottom:5px}.doc-hd .crumb a{color:#999}
+.doc-hd h1{font-size:22px;color:#222}
+.doc-bd{padding:18px 28px 26px;font-size:14px;color:#444;line-height:1.9}
+.fb-form{max-width:560px}
+.fb-form label{display:block;font-size:13px;color:#555;margin:14px 0 6px}
+.fb-form select,.fb-form input,.fb-form textarea{width:100%;border:1px solid #ccc;border-radius:3px;
+  padding:8px 12px;font-size:14px;font-family:"Microsoft YaHei";outline:none}
+.fb-form select:focus,.fb-form input:focus,.fb-form textarea:focus{border-color:var(--c-main)}
+.fb-form textarea{height:120px;resize:vertical;line-height:1.6}
+.fb-btn{margin-top:16px;height:40px;padding:0 28px;border:none;border-radius:3px;cursor:pointer;
+  background:linear-gradient(#3aa0f5,#2b8eea);color:#fff;font:bold 14px "Microsoft YaHei";letter-spacing:2px}
+.fb-btn:hover{filter:brightness(.95)}
+.note{font-size:12px;color:#999;margin-top:14px;line-height:1.8}
+.note a{color:var(--c-main)}
+</style>
+</head>
+<body data-theme="baidu">
+
+<div class="topbar"><div class="wrap">
+  <div><a href="landing.html">← 返回首页</a><span class="tz" data-clock></span></div>
+  <div><a href="about.html">关于</a>|<a href="archive.html">收录词条</a>|<a href="feedback.html">意见反馈</a>|<a href="help.html">使用帮助</a></div>
+</div></div>
+
+<div class="doc">
+  <div class="doc-hd">
+    <div class="crumb"><a href="landing.html">首页</a> &gt; 意见反馈</div>
+    <h1>意见反馈</h1>
+  </div>
+  <div class="doc-bd">
+    <p>觉得某一页「太假，一眼假」还是「太真，吓人」？发现了 13 年前不该出现的穿帮内容？或者就是单纯想夸夸/吐槽？都欢迎告诉我们。</p>
+
+    <form class="fb-form" onsubmit="return sendFb(event)">
+      <label for="type">反馈类型</label>
+      <select id="type">
+        <option value="too_obvious">太假了 —— 一眼就看出是编的</option>
+        <option value="too_real">太真了 —— 真假难辨，有点吓人</option>
+        <option value="content_issue">内容问题 —— 穿帮 / 出现了 13 年后的东西</option>
+        <option value="other">其它</option>
+      </select>
+
+      <label for="page">相关页面（选填，比如 news/神舟十号）</label>
+      <input id="page" type="text" placeholder="把出问题的词条路径贴这里">
+
+      <label for="comment">具体说说</label>
+      <textarea id="comment" placeholder="写下你的想法……"></textarea>
+
+      <button class="fb-btn" type="submit">提交反馈</button>
+    </form>
+
+    <div class="note">
+      提交会用你本机的邮件客户端，把内容发到作者邮箱
+      <a href="mailto:zzy1262454252@gmail.com">zzy1262454252@gmail.com</a>。<br>
+      若未弹出邮件窗口，可直接复制内容发到上述邮箱。
+    </div>
+  </div>
+</div>
+
+<div class="footer" style="margin-top:18px"><div class="wrap">
+  <div class="nav"><a href="about.html">关于</a>|<a href="archive.html">收录词条</a>|<a href="feedback.html">意见反馈</a>|<a href="help.html">使用帮助</a></div>
+  <div class="copy">© 2010-2016 hao123.com · 一个关于「真实如何被协商」的实验</div>
+</div></div>
+
+<script src="runtime.js"></script>
+<script>
+function sendFb(e){
+  e.preventDefault();
+  var typeSel = document.getElementById("type");
+  var type = typeSel.options[typeSel.selectedIndex].text;
+  var page = document.getElementById("page").value.trim();
+  var comment = document.getElementById("comment").value.trim();
+  if (!comment){ alert("写一点具体内容吧～"); return false; }
+  var body =
+    "【反馈类型】" + type + "\n" +
+    "【相关页面】" + (page || "（未填）") + "\n" +
+    "【内容】\n" + comment + "\n\n" +
+    "—— 来自 幻觉导航网 意见反馈";
+  location.href = "mailto:zzy1262454252@gmail.com" +
+    "?subject=" + encodeURIComponent("[幻觉导航网] 意见反馈") +
+    "&body=" + encodeURIComponent(body);
+  return false;
+}
+</script>
+</body>
+</html>

@@ -13,6 +13,9 @@
   padding:20px;text-align:center}
 .auth-hd .biglogo{font:900 italic 40px/1 Arial;letter-spacing:-2px}
 .ha{color:var(--c-main)}.num{color:var(--c-hot)}
+.biglogo .strike{color:#b8c2cc;position:relative}
+.biglogo .strike::after{content:"";position:absolute;left:-1px;right:-1px;top:52%;height:3px;
+  background:var(--c-hot);transform:rotate(-8deg);border-radius:2px}
 .auth-hd p{color:#999;font-size:12px;margin-top:6px}
 .auth-body{padding:22px}
 label{display:block;font-size:13px;color:#555;margin:0 0 6px}
@@ -46,7 +49,7 @@ input:focus{border-color:var(--c-main)}
 
 <div class="auth-wrap"><div class="auth-card">
   <div class="auth-hd">
-    <div class="biglogo"><span class="ha">hao</span><span class="num">123</span></div>
+    <div class="biglogo"><span class="ha">ha</span><span class="strike">o</span><span class="ha">i</span><span class="num">123</span></div>
     <p id="subtitle">登录后即可触发新词条生成</p>
   </div>
   <div class="auth-body">

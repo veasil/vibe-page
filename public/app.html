@@ -178,6 +178,12 @@
   window.addEventListener("message", function(e){
     if (e.source !== frame.contentWindow) return;          // 只认自己的 iframe
     var d = e.data || {};
+    // 站点级页脚链接：跳到真实静态页。白名单校验——iframe 内是不可信 AI 内容，防开放重定向
+    if (d.type === "vibe:site"){
+      var ALLOW = { about:1, archive:1, feedback:1, help:1, landing:1 };
+      if (ALLOW[d.site]) location.href = "/" + d.site + ".html";
+      return;
+    }
     if (d.type !== "vibe:navigate") return;
     var raw = String(d.slug || "").replace(/^https?:\/\//, "").trim();
     if (!raw) return;

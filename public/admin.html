@@ -52,6 +52,10 @@
     cursor:pointer;border-radius:3px;padding:2px 12px;font-size:12px} .home-btn:hover{background:#fdecec}
   .muted{color:var(--mut)} .empty{color:#aaa;padding:8px 2px}
   #msg{font-size:12px;margin-left:6px}
+  .bd input, .bd textarea, .bd select{border:1px solid var(--bd);border-radius:3px;padding:6px 8px;
+    font-size:13px;font-family:inherit;width:100%;box-sizing:border-box}
+  .bd input:focus, .bd textarea:focus{border-color:var(--main);outline:none}
+  .bd label{color:#555;font-size:12px}
 </style>
 </head>
 <body>
@@ -124,6 +128,32 @@
         点「删」下架某词条；删后该路径下次访问会按当前规则重新生成新「真实」。用于审核违规/低质 UGC。
       </div>
       <div id="entries"><span class="empty">加载中…</span></div>
+    </div>
+  </div>
+
+  <!-- 彩蛋 -->
+  <div class="panel">
+    <div class="hd"><b style="background:#d9a441"></b>本期彩蛋
+      <span class="muted" id="egg-meta"></span>
+    </div>
+    <div class="bd">
+      <div class="muted" style="font-size:11px;margin-bottom:10px">
+        每期(15天)一个谜底=13年前那个时期真实发生的「非显词」。线索会显示在落地页；谜底只存服务端，玩家命中关键词即进彩蛋页。
+      </div>
+      <div style="display:grid;grid-template-columns:120px 1fr;gap:8px 12px;align-items:center;font-size:13px">
+        <label>谜底关键词</label><input id="egg-keyword" placeholder="如：余额宝">
+        <label>别名(逗号分隔)</label><input id="egg-aliases" placeholder="如：余额宝, yuebao, 余额 宝">
+        <label>线索(落地页显示)</label><input id="egg-clue" placeholder="如：13年前的六月，淘宝里诞生了一个会“生钱”的东西。">
+        <label>13年前史实</label><textarea id="egg-fact" rows="2" style="font-family:inherit"></textarea>
+        <label>13年后寄语</label><textarea id="egg-now" rows="2" style="font-family:inherit"></textarea>
+        <label>纪念徽章名</label><input id="egg-badge" placeholder="占位，先随便填">
+        <label>彩蛋页模式</label>
+        <select id="egg-mode"><option value="template">占位模板(填上面字段)</option><option value="html">手写整页 HTML</option></select>
+        <label style="align-self:start">手写 HTML</label>
+        <textarea id="egg-html" rows="4" style="font-family:monospace;font-size:12px" placeholder="mode=html 时生效；支持 {{keyword}} {{rank}} {{fact}} {{now}} {{badge}} 占位"></textarea>
+      </div>
+      <button class="btn" id="egg-save" style="margin-top:12px">保存本期彩蛋</button>
+      <span id="egg-msg" class="muted" style="margin-left:8px"></span>
     </div>
   </div>
 </div>
@@ -201,6 +231,20 @@
       return '<span class="entry"><a href="' + u + '" target="_blank">' + esc(s) +
         '</a><button class="del" data-del="' + esc(s) + '" title="下架此词条">删</button></span>';
     }).join("");
+
+    // 彩蛋
+    var egg = (d.egg && d.egg.current) || {};
+    document.getElementById("egg-meta").textContent =
+      "（第 " + (d.egg ? d.egg.period : "?") + " 期 · 已被 " + (d.egg ? d.egg.foundCount : 0) + " 人发现" +
+      (egg.keyword ? "" : " · 本期未设置") + "）";
+    document.getElementById("egg-keyword").value = egg.keyword || "";
+    document.getElementById("egg-aliases").value = (egg.aliases || []).join(", ");
+    document.getElementById("egg-clue").value = egg.clue || "";
+    document.getElementById("egg-fact").value = egg.fact || "";
+    document.getElementById("egg-now").value = egg.now || "";
+    document.getElementById("egg-badge").value = egg.badge || "";
+    document.getElementById("egg-mode").value = egg.mode || "template";
+    document.getElementById("egg-html").value = egg.html || "";
   }
 
   // 删除 / 清首页（DELETE）
@@ -243,6 +287,34 @@
       if (!r.ok){ setMsg("切换失败 " + r.status, true); return; }
       await load();   // 重新拉状态
     } catch(e){ setMsg("网络错误：" + e.message, true); }
+  });
+
+  // 保存本期彩蛋
+  document.getElementById("egg-save").addEventListener("click", async function(){
+    var em = document.getElementById("egg-msg");
+    var kw = document.getElementById("egg-keyword").value.trim();
+    if (!kw){ em.textContent = "谜底关键词不能为空"; em.style.color = "#e60012"; return; }
+    em.textContent = "保存中…"; em.style.color = "#888";
+    var egg = {
+      keyword: kw,
+      aliases: document.getElementById("egg-aliases").value,
+      clue:  document.getElementById("egg-clue").value,
+      fact:  document.getElementById("egg-fact").value,
+      now:   document.getElementById("egg-now").value,
+      badge: document.getElementById("egg-badge").value,
+      mode:  document.getElementById("egg-mode").value,
+      html:  document.getElementById("egg-html").value,
+    };
+    try {
+      var r = await fetch("/api/admin", {
+        method: "POST",
+        headers: Object.assign({ "Content-Type":"application/json" }, headers()),
+        body: JSON.stringify({ egg: egg }),
+      });
+      if (!r.ok){ em.textContent = "保存失败 " + r.status; em.style.color = "#e60012"; return; }
+      em.textContent = "已保存 ✓"; em.style.color = "#5a9c2e";
+      await load();
+    } catch(e){ em.textContent = "网络错误：" + e.message; em.style.color = "#e60012"; }
   });
 
   document.getElementById("refresh").addEventListener("click", load);

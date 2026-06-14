@@ -73,6 +73,16 @@
       var slug = a.getAttribute("data-slug");
       var href = a.getAttribute("href") || "";
 
+      // 0) 站点级页脚链接（关于/收录词条/意见反馈/使用帮助）→ 真实静态页，不走生成。
+      //    iframe 内沙箱无法自行顶层跳转，交父壳导航；非 iframe 直接按 href 走。
+      var site = a.getAttribute("data-site");
+      if (site){
+        e.preventDefault();
+        if (inIframe) parent.postMessage({ type: "vibe:site", site: site }, "*");
+        else location.href = "/" + site + ".html";
+        return;
+      }
+
       // 1) 显式生成型内链（任何上下文都接管）
       if (a.classList.contains("inner-link") || slug){
         e.preventDefault(); go(slug || href); return;
@@ -142,8 +152,22 @@
     document.querySelectorAll("[data-era-date]").forEach(function(el){ el.textContent = txt; });
   }
 
+  /* ---------- 本页生成（封存）时间：值由服务端首次生成时冻结进 body[data-gen-ts]，
+     此处只负责格式化展示。显示按 −13 年入戏（与全站时代锚点一致）。      ---------- */
+  function paintGenTime(){
+    var raw = document.body && document.body.getAttribute("data-gen-ts");
+    if (!raw) return;
+    var d = new Date(raw);
+    if (isNaN(d.getTime())) return;
+    d.setFullYear(d.getFullYear() - 13);   // 入戏：与顶栏时钟/时代日期同步减 13 年
+    var W = ["星期日","星期一","星期二","星期三","星期四","星期五","星期六"];
+    var txt = d.getFullYear() + "年" + pad(d.getMonth()+1) + "月" + pad(d.getDate()) + "日 " +
+      W[d.getDay()] + " " + pad(d.getHours()) + ":" + pad(d.getMinutes());
+    document.querySelectorAll("[data-gen-time]").forEach(function(el){ el.textContent = txt; });
+  }
+
   function boot(){
-    startClock(); startSearch(); startSetHome(); paintEraDate();
+    startClock(); startSearch(); startSetHome(); paintEraDate(); paintGenTime();
     startInnerLinks(); startPopupQueue();
     paintFav(); startLoadingChoreo();
   }
