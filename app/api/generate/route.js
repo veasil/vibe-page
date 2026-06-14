@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { createClient, supabaseConfigured } from "@/utils/supabase/server";
 import { requireMockUser, AuthError } from "../../../lib/auth.mjs";
 import { authForceMock } from "../../../lib/flags.mjs";
-import { generatePage, QuotaError, TruncationError, BlockedError } from "../../../lib/generate.mjs";
+import { generatePage, QuotaError, TruncationError, BlockedError, UpstreamError } from "../../../lib/generate.mjs";
 import { sanitizeSlug } from "../../../lib/prompt.mjs";
 
 export const runtime = "nodejs";
@@ -62,6 +62,12 @@ export async function POST(req) {
     if (e instanceof QuotaError) return json({ error: e.message, quota: e.quota }, 429);
     if (e instanceof BlockedError) return json({ error: e.message, blocked: true }, 451);
     if (e instanceof TruncationError) return json({ error: e.message, retry: true }, 502);
+    // 上游 LLM 失败：把真实原因（网络/代理 vs 欠费 vs key 失效 vs 限流）带给前端，不再统一压成「生成失败」
+    if (e instanceof UpstreamError) {
+      // detail（上游响应体/网络错误）只进日志，不回传前端，避免泄露 key 相关信息
+      console.error(`[generate:upstream] kind=${e.kind} provider=${e.provider} status=${e.upstreamStatus || "-"} ${e.detail || ""}`);
+      return json({ error: e.message, reason: e.kind, retry: e.retryable }, e.status);
+    }
     console.error("[generate]", e);
     return json({ error: "生成失败" }, 500);
   }

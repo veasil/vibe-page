@@ -56,6 +56,34 @@
   #err{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:11}
   #err .box{background:#fff;border:1px solid #e3e5e8;border-radius:6px;padding:24px 30px;text-align:center;box-shadow:0 4px 18px rgba(0,0,0,.1)}
   #err h3{color:#c0392b;margin:0 0 8px} #err a{color:#2b8eea}
+  /* —— 额度悬浮窗 —— */
+  #quota{position:fixed;inset:0;display:none;z-index:20;background:rgba(0,0,0,.18)}
+  #quota .qp{position:absolute;top:38px;right:24px;width:300px;background:#fff;border:1px solid #d0d3d6;
+    border-radius:8px;box-shadow:0 8px 28px rgba(0,0,0,.22);overflow:hidden;font-family:"Microsoft YaHei",sans-serif}
+  #quota .qp-hd{background:linear-gradient(180deg,#eaf4fe,#fff);border-bottom:1px solid #eee;
+    padding:11px 14px;font-size:14px;font-weight:bold;color:#222;display:flex;justify-content:space-between;align-items:center}
+  #quota .qp-x{cursor:pointer;color:#999;font-size:15px;line-height:1}
+  #quota .qp-x:hover{color:#c0392b}
+  #quota .qp-bd{padding:16px 16px 18px}
+  #quota .qp-num{font:bold 30px/1 Tahoma;color:#2b8eea;text-align:center}
+  #quota .qp-num b{color:#e60012}
+  #quota .qp-num span{font-size:16px;color:#aaa}
+  #quota .qp-label{text-align:center;color:#888;font-size:12px;margin:6px 0 12px}
+  #quota .qp-bar{height:8px;background:#eef1f4;border-radius:5px;overflow:hidden}
+  #quota .qp-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#3aa0f5,#2b8eea);transition:width .4s}
+  #quota .qp-email{color:#bbb;font-size:11px;text-align:center;margin-top:10px;word-break:break-all}
+  #quota .qp-redeem{margin-top:16px;border-top:1px dashed #eee;padding-top:14px}
+  #quota .qp-redeem label{display:block;font-size:12px;color:#666;margin-bottom:7px}
+  #quota .qp-row{display:flex;gap:6px}
+  #quota .qp-row input{flex:1;height:34px;border:1px solid #ccc;border-radius:3px;padding:0 10px;
+    font-size:13px;font-family:inherit;outline:none;letter-spacing:1px}
+  #quota .qp-row input:focus{border-color:#2b8eea}
+  #quota .qp-row button{width:64px;border:none;border-radius:3px;cursor:pointer;
+    background:linear-gradient(#3aa0f5,#2b8eea);color:#fff;font:bold 13px "Microsoft YaHei"}
+  #quota .qp-row button:hover{filter:brightness(.95)}
+  #quota .qp-row button:disabled{opacity:.6;cursor:default}
+  #quota .qp-msg{font-size:12px;margin-top:9px;min-height:16px}
+  #quota .qp-msg.ok{color:#5a9c2e} #quota .qp-msg.err{color:#c0392b}
 </style>
 </head>
 <body>
@@ -84,6 +112,25 @@
   </div>
 </div></div>
 <div id="err"><div class="box"><h3 id="et"></h3><p id="em"></p><a href="landing.html">← 返回首页</a></div></div>
+
+<!-- 额度悬浮窗（父壳渲染，持登录态可查真实额度；iframe 内点「我的额度」postMessage 触发） -->
+<div id="quota"><div class="qp">
+  <div class="qp-hd">我的额度 <span class="qp-x" id="qpClose">✕</span></div>
+  <div class="qp-bd">
+    <div class="qp-num"><b id="qpRemain">–</b> / <span id="qpMax">–</span></div>
+    <div class="qp-label">今日剩余可生成新词条数（每日重置）</div>
+    <div class="qp-bar"><i id="qpBar"></i></div>
+    <div class="qp-email" id="qpEmail"></div>
+    <div class="qp-redeem">
+      <label>邀请码 / 兑换码</label>
+      <div class="qp-row">
+        <input id="qpCode" placeholder="输入邀请码或兑换码" maxlength="32" autocomplete="off">
+        <button id="qpRedeem">兑换</button>
+      </div>
+      <div class="qp-msg" id="qpMsg"></div>
+    </div>
+  </div>
+</div></div>
 
 <!-- 红线一：生成内容跑在沙箱 iframe；不给 allow-same-origin，AI 脚本碰不到主站登录态 -->
 <iframe id="frame" sandbox="allow-scripts allow-popups" referrerpolicy="no-referrer"></iframe>
@@ -158,7 +205,19 @@
       if (res.status === 401){ gotoLogin(); return; }
       if (res.status === 429){ showErr("今日配额已用尽", "新词条生成已达上限，明天再来，或浏览已封存的词条。"); return; }
       if (res.status === 451){ showErr("内容不可用", "该内容因涉及违规被拦截，无法生成或封存。"); return; }
-      if (!res.ok){ showErr("生成失败", "服务暂时不可用（" + res.status + "）。若本机开了代理（如 Clash），请让它绕过 localhost/127.0.0.1。"); return; }
+      if (!res.ok){
+        // 后端已把失败原因结构化（reason: network/billing/auth/rate/upstream）——按真实原因提示，不再无脑甩锅代理
+        var ed = await res.json().catch(function(){ return {}; });
+        var hint = {
+          network:  "无法连接到生成服务。若本机开了代理（如 Clash），请让它绕过 localhost/127.0.0.1，或暂时关闭代理后重试。",
+          billing:  "生成服务账户额度不足（欠费），需要充值后才能继续生成。",
+          auth:     "生成服务认证失败（API key 失效或无权限），请检查服务端配置。",
+          rate:     "生成服务繁忙（上游限流），请稍候片刻再试。",
+          upstream: "生成服务暂时异常，请稍后重试。",
+        }[ed.reason] || ("服务暂时不可用（" + res.status + "）。");
+        showErr(ed.error || "生成失败", hint);
+        return;
+      }
       var html = await res.text();
       // 防御：200 但 body 为空/过短（被代理或网络截断的典型表现）→ 报错而非塞空白进 iframe 造成神秘白屏
       if (!html || html.replace(/\s/g, "").length < 40){
@@ -171,6 +230,70 @@
     } catch(e){ showErr("网络错误", e.message); }
   }
 
+  // —— 额度悬浮窗 ——（父壳上下文，能带登录态请求 /api/quota、/api/redeem）
+  function authHeaders(){
+    var h = { "Content-Type": "application/json" };
+    if (mode === "mock" && mockToken) h["Authorization"] = "Bearer " + mockToken;  // 真实模式靠 Cookie
+    return h;
+  }
+  function loadQuota(){
+    document.getElementById("qpRemain").textContent = "…";
+    fetch("/api/quota", { headers: authHeaders(), credentials: "same-origin" })
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        var labelEl = document.querySelector("#quota .qp-label");
+        if (d && d.unlimited){
+          document.getElementById("qpRemain").textContent = "∞";
+          document.getElementById("qpMax").textContent = "∞";
+          if (labelEl) labelEl.textContent = "你的账号为无限生成额度（邀请码已激活）";
+          document.getElementById("qpBar").style.width = "100%";
+          document.getElementById("qpEmail").textContent = d.email ? ("账号：" + d.email) : "";
+        } else if (d && typeof d.remaining === "number"){
+          document.getElementById("qpRemain").textContent = d.remaining;
+          document.getElementById("qpMax").textContent = d.max;
+          if (labelEl) labelEl.textContent = "今日剩余可生成新词条数（每日重置）" +
+            (d.bonus > 0 ? ("　含兑换码额度 " + d.bonus + " 次") : "");
+          document.getElementById("qpEmail").textContent = d.email ? ("账号：" + d.email) : "";
+          var dailyRem = typeof d.dailyRemaining === "number" ? d.dailyRemaining : d.remaining;
+          var pct = d.max ? Math.round((d.max - dailyRem) / d.max * 100) : 0;
+          document.getElementById("qpBar").style.width = pct + "%";
+        } else {
+          document.getElementById("qpRemain").textContent = "–";
+          document.getElementById("qpEmail").textContent = (d && d.error) || "";
+        }
+      })
+      .catch(function(){ document.getElementById("qpRemain").textContent = "–"; });
+  }
+  function openQuota(){
+    document.getElementById("qpMsg").textContent = "";
+    document.getElementById("qpMsg").className = "qp-msg";
+    document.getElementById("qpCode").value = "";
+    document.getElementById("quota").style.display = "block";
+    loadQuota();
+  }
+  function closeQuota(){ document.getElementById("quota").style.display = "none"; }
+  document.getElementById("qpClose").addEventListener("click", closeQuota);
+  document.getElementById("quota").addEventListener("click", function(e){ if (e.target === this) closeQuota(); });
+  document.getElementById("qpRedeem").addEventListener("click", function(){
+    var code = document.getElementById("qpCode").value.trim();
+    var msg = document.getElementById("qpMsg");
+    if (!code){ msg.className = "qp-msg err"; msg.textContent = "请输入兑换码"; return; }
+    var btn = this; btn.disabled = true;
+    fetch("/api/redeem", { method: "POST", headers: authHeaders(), credentials: "same-origin",
+      body: JSON.stringify({ code: code }) })
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        msg.className = "qp-msg " + (d && d.ok ? "ok" : "err");
+        msg.textContent = (d && d.message) || (d && d.ok ? "兑换成功" : "兑换失败");
+        if (d && d.ok) loadQuota();
+      })
+      .catch(function(){ msg.className = "qp-msg err"; msg.textContent = "网络错误，请重试"; })
+      .finally(function(){ btn.disabled = false; });
+  });
+  document.getElementById("qpCode").addEventListener("keydown", function(e){
+    if (e.key === "Enter") document.getElementById("qpRedeem").click();
+  });
+
   // 内链导航：只信任来自本 iframe 的 vibe:navigate 消息，校验后改 hash 再加载
   //   · slug 前导 "/" = 绝对路径（直达该词条，全站唯一）
   //   · 否则 = 相对路径，追加为【当前页的子路径】，由此形成词条树（协商真实按路径封存）
@@ -178,10 +301,13 @@
   window.addEventListener("message", function(e){
     if (e.source !== frame.contentWindow) return;          // 只认自己的 iframe
     var d = e.data || {};
-    // 站点级页脚链接：跳到真实静态页。白名单校验——iframe 内是不可信 AI 内容，防开放重定向
+    // 「我的额度」：弹出悬浮窗（窗体在父壳，持登录态可查真实额度）
+    if (d.type === "vibe:quota"){ openQuota(); return; }
+    // 站点级页脚/客户端链接：跳到真实静态页。白名单校验——iframe 内是不可信 AI 内容，防开放重定向
     if (d.type === "vibe:site"){
-      var ALLOW = { about:1, archive:1, feedback:1, help:1, landing:1 };
-      if (ALLOW[d.site]) location.href = "/" + d.site + ".html";
+      var ALLOW = { about:"/about.html", archive:"/archive.html", feedback:"/feedback.html",
+                    help:"/help.html", landing:"/landing.html", contact:"/about.html#contact" };
+      if (ALLOW[d.site]) location.href = ALLOW[d.site];
       return;
     }
     if (d.type !== "vibe:navigate") return;
