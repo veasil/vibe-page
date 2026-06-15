@@ -52,7 +52,8 @@
     <a href="javascript:;">加入收藏</a>
     <span class="tz" data-clock></span>
   </div>
-  <div>
+  <div id="authNav">
+    <!-- 登录态由 JS 注入：未登录=登录|注册|客户端；已登录=我的额度|兑换码|退出 -->
     <a href="login.html">登录</a>|<a href="login.html?tab=register">注册</a>|<a href="about.html#contact">客户端</a>
   </div>
 </div></div>
@@ -99,7 +100,7 @@
   </div>
 
   <div style="text-align:center;margin-top:8px" class="cta">
-    <a class="login" href="/app.html">登录开始探索</a>
+    <a class="login" href="javascript:;" id="ctaEnter">登录开始探索</a>
     <a class="reg" href="login.html?tab=register">免费注册</a>
   </div>
 </div>
@@ -111,19 +112,64 @@
 
 <script src="runtime.js"></script>
 <script>
-  // 地址栏 / 热门入口：未登录一律先去登录页（生成需鉴权）
+  // —— 登录态探测（Supabase 走 Cookie 会话，mock 走 localStorage）——
+  // 在落地页就判定，用于：① 顶栏切换 登录|注册 ↔ 我的额度|兑换码|退出 ② 入口未登录先去登录页
+  var AUTH = { loggedIn: false, mode: "mock", sb: null };
+  async function detectAuth(){
+    var cfg = await fetch("/api/config").then(function(r){ return r.json(); }).catch(function(){ return { authMode:"mock" }; });
+    AUTH.mode = cfg.authMode;
+    if (cfg.authMode === "supabase"){
+      try {
+        var m = await import("https://esm.sh/@supabase/ssr");
+        AUTH.sb = m.createBrowserClient(cfg.supabaseUrl, cfg.supabaseKey);
+        var s = await AUTH.sb.auth.getSession();
+        AUTH.loggedIn = !!(s && s.data && s.data.session);
+      } catch(_){ AUTH.loggedIn = false; }
+    } else {
+      AUTH.loggedIn = !!localStorage.getItem("vibe_token");
+    }
+    renderNav();
+  }
+  function renderNav(){
+    var nav = document.getElementById("authNav");
+    if (!nav) return;
+    if (AUTH.loggedIn){
+      // 已登录：我的额度 / 兑换码 都进 app 的额度悬浮窗（含兑换码输入框）；退出注销
+      nav.innerHTML = '<a href="/app.html?panel=quota">我的额度</a>|' +
+        '<a href="/app.html?panel=quota">兑换码</a>|<a href="javascript:;" id="logoutLink">退出</a>';
+      var lo = document.getElementById("logoutLink");
+      if (lo) lo.addEventListener("click", logout);
+    } else {
+      nav.innerHTML = '<a href="login.html">登录</a>|<a href="login.html?tab=register">注册</a>|' +
+        '<a href="about.html#contact">客户端</a>';
+    }
+  }
+  async function logout(){
+    try { if (AUTH.mode === "supabase" && AUTH.sb) await AUTH.sb.auth.signOut(); } catch(_){}
+    try { localStorage.removeItem("vibe_token"); } catch(_){}
+    AUTH.loggedIn = false; renderNav();
+    location.reload();
+  }
+  detectAuth();
+
+  // 地址栏 / 热门入口：未登录先去登录页（生成需鉴权），登录后直达 app
   function goTo(slug){
     var s = (slug||"").trim().replace(/^https?:\/\//,"").replace(/^\/+/,"");
     if(!s){ alert("随便输入一个网址路径吧，比如 news/神舟十号"); return; }
-    // 直接进 app —— 登录态由 app.html 统一判定（Supabase 走 Cookie 会话，mock 走 localStorage）。
-    // 已登录则保持登录、直达词条；未登录时 app.html 会自动跳登录页并带 next 回跳。
-    // （此前这里只认 mock 的 localStorage.vibe_token，Supabase 登录用户每次都被误判未登录、被迫重新登录）
-    location.href = "/app.html#/" + s;
+    var appUrl = "/app.html#/" + s;
+    if (AUTH.loggedIn){ location.href = appUrl; }
+    else { location.href = "login.html?next=" + encodeURIComponent(appUrl); }   // 未登录：先登录，带 next 回跳
   }
   function enter(e){ e.preventDefault(); goTo(document.getElementById("addr").value); }
   document.addEventListener("click", function(e){
     var a = e.target.closest("[data-go]"); if(a) goTo(a.getAttribute("data-go"));
   });
+  // CTA「登录开始探索」：登录后进 app 首页，未登录先去登录页
+  (function(){ var c = document.getElementById("ctaEnter"); if(!c) return;
+    c.addEventListener("click", function(){
+      if (AUTH.loggedIn) location.href = "/app.html";
+      else location.href = "login.html?next=" + encodeURIComponent("/app.html");
+    }); })();
   // 词条计数器：真实数据 —— 直接显示 kv.keys('page:*').length，不再叠加虚构基数/自增
   (function(){ var el=document.getElementById("cnt");
     fetch("/api/stats").then(r=>r.json())

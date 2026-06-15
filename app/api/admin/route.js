@@ -3,7 +3,7 @@
 //   POST → 设置运行时开关（目前：authForceMock 强制 mock 登录）
 // 鉴权：可选 ADMIN_TOKEN（设了就必须带 x-admin-token；没设则 dev 放行）。
 import * as kv from "../../../lib/kv.mjs";
-import { pickProvider } from "../../../lib/llm.mjs";
+import { pickProvider, estCostUsd } from "../../../lib/llm.mjs";
 import { setAuthForceMock, flagsState } from "../../../lib/flags.mjs";
 import { getEgg, setEgg, currentPeriod } from "../../../lib/egg.mjs";
 import { generateCodes, listCodes, revokeCode, deleteCode } from "../../../lib/codes.mjs";
@@ -35,6 +35,7 @@ export async function GET(req) {
   const authMode = supabaseUrl && supabaseKey && !flags.effective ? "supabase" : "mock";
 
   const period = currentPeriod();
+  const provider = pickProvider() || "mock";
   const [slugs, gen, quota, home, eggCfg, eggCount, codes] = await Promise.all([
     kv.archivedSlugs(),
     kv.readGenStats(),
@@ -45,9 +46,17 @@ export async function GET(req) {
     listCodes(),
   ]);
 
+  // 成本按【当前 provider 价】从累计 token 实时重算——累加器 stat:cost:micro 是各次生成
+  // 当时单价的历史和（改价/换 provider 后不回溯），用它展示会失真；这里用现价统一估算。
+  // 缺乏缓存命中拆分，按全部 input 未命中估（偏高一点，仅供参考）。
+  if (provider !== "mock"){
+    gen.costUsd = estCostUsd({ provider, input: gen.tokIn, output: gen.tokOut, cached: 0 });
+    gen.costProvider = provider;
+  }
+
   return json({
     env: {
-      provider: pickProvider() || "mock",
+      provider,
       authMode,
       supabaseConfigured: !!(supabaseUrl && supabaseKey),
       kvBackend: process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL ? "upstash" : "memory",

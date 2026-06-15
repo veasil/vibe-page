@@ -235,7 +235,8 @@
     document.getElementById("g-count").textContent = fmt(d.gen.count);
     document.getElementById("g-today").textContent = fmt(d.gen.today);
     document.getElementById("g-tok").innerHTML = fmt(d.gen.tokIn) + ' <small>/ ' + fmt(d.gen.tokOut) + '</small>';
-    document.getElementById("g-cost").innerHTML = '$' + (d.gen.costUsd||0).toFixed(4);
+    document.getElementById("g-cost").innerHTML = '$' + (d.gen.costUsd||0).toFixed(4) +
+      (d.gen.costProvider ? ' <small>按 ' + esc(d.gen.costProvider) + ' 现价</small>' : '');
 
     // 配额
     var tb = document.querySelector("#quota-tb tbody");

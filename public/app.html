@@ -170,6 +170,8 @@
     }
     window.addEventListener("hashchange", load);
     load();
+    // 从落地页「我的额度」入口跳来（/app.html?panel=quota）→ 直接弹额度悬浮窗
+    try { if (new URLSearchParams(location.search).get("panel") === "quota") openQuota(); } catch(_){}
   }
   init();
 
